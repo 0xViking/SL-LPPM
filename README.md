@@ -2,14 +2,14 @@
 UI to monitor LP positions on Uniswap
 
 Day 1 :
-* Status-1 (09-06-2022) ~ 1.5hrs work:
+### Status-1 (09-06-2022) ~ 1.5hrs work:
  * Initialized repo with nextjs
  * Created basic UI with Solidus Labs logo 
  * Connect wallet button implemented using Moralis, web3uikit
 
 ![image](https://user-images.githubusercontent.com/72988597/172757987-7ef42359-8477-42ee-96d0-2e0ee4cf35cd.png)
 
-* Status-2 (09-06-2022) ~ 4hrs work:
+### Status-2 (09-06-2022) ~ 4hrs work:
  * Created sidebar menu consisting to menu items
  * Created Main view which will show the NFTs in the connected wallet and connected chain using NFTBalance component powered by web3uikit
  * Anoher UI to show LP Position(As of now temp view shows a card)

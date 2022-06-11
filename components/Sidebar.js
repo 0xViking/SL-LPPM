@@ -2,14 +2,21 @@ import Link from "next/link"
 import Image from "next/image"
 import { Fragment, useState } from "react"
 import { Dialog, Transition } from "@headlessui/react"
-import { ChartBarIcon, HomeIcon, MenuIcon, XIcon } from "@heroicons/react/outline"
+import {
+    ChartBarIcon,
+    InformationCircleIcon,
+    HomeIcon,
+    MenuIcon,
+    XIcon,
+} from "@heroicons/react/outline"
 
 {
     /* Navigation Object */
 }
 const navigation = [
     { name: "Home", href: "/", icon: HomeIcon, current: true },
-    { name: "Liquidity Position", href: "/lpposition", icon: ChartBarIcon, current: false },
+    { name: "Uniswap LP V2", href: "/lppositionV2", icon: ChartBarIcon, current: false },
+    { name: "Uniswap LP V3", href: "/lppositionV3", icon: InformationCircleIcon, current: false },
 ]
 
 function classNames(...classes) {

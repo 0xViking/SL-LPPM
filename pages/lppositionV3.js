@@ -23,7 +23,7 @@ export default function lppositionV3() {
     }
 
     const options = {
-        user: "0x00e6f8d8fb80b0c302a6bd849b79982dc9945b15",
+        user: account,
         // user: "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
         chainId: chainId,
         token_address: chainIdAddrMap[chainId]
@@ -38,7 +38,7 @@ export default function lppositionV3() {
             type: params.type,
             message: params.message,
             title: params.title,
-            position: "topR",
+            position: "bottomL",
             icon: params.icon,
         })
     }

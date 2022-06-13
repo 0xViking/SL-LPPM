@@ -11,7 +11,7 @@ export default function doggie() {
         <div>
             <div className="flex mt-10">
                 <Tooltip
-                    content={`All NFTs in the wallet address ${account} on ${chainIdNameMap[chainId]} blockchain`}
+                    content={`All NFTs in the wallet ${account} on ${chainIdNameMap[chainId]} blockchain`}
                     position="right"
                 >
                     <Icon fill="#68738D" size={25} svg="helpCircle" />

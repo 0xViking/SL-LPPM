@@ -55,7 +55,7 @@ export default function lppositionV3() {
                     icon: "exclamation",
                 }
                 // handleNewNotification(params)
-                alert(params.message)
+                // alert(params.message)
                 setNFTs([{}])
                 return
             }
@@ -121,9 +121,9 @@ export default function lppositionV3() {
         <div>
             <div className="flex mt-10">
                 <Tooltip
-                    content={`Uniswap V3 Liquidity Position for the wallet address ${
-                        options.user
-                    } on ${chainIdNameMap[options.chainId]} blockchain`}
+                    content={`Uniswap V3 Liquidity Position for the wallet ${options.user} on ${
+                        chainIdNameMap[options.chainId]
+                    } blockchain`}
                     position="right"
                 >
                     <Icon fill="#68738D" size={25} svg="helpCircle" />

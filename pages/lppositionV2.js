@@ -46,7 +46,7 @@ export default function lppositionV2() {
                     title: "Uniswap LP Position V2",
                 }
                 // handleNewNotification(params)
-                alert(params.message)
+                // alert(params.message)
                 setPositions([{}])
                 return
             }
@@ -110,9 +110,9 @@ export default function lppositionV2() {
         <div>
             <div className="flex mt-10">
                 <Tooltip
-                    content={`Uniswap V2 Liquidity Position for the wallet address ${
-                        options.user
-                    } on ${chainIdNameMap[options.chainId]} blockchain`}
+                    content={`Uniswap V2 Liquidity Position for the wallet ${options.user} on ${
+                        chainIdNameMap[options.chainId]
+                    } blockchain`}
                     position="right"
                 >
                     <Icon fill="#68738D" size={25} svg="helpCircle" />

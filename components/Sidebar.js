@@ -105,7 +105,7 @@ export default function Sidebar() {
                                         {/* Sidebar Navigation in Mobile view */}
                                         <nav className="mt-5 px-2 space-y-1">
                                             {navigation.map((item) => (
-                                                <Link href={item.href} passHref>
+                                                <Link key={item.name} href={item.href} passHref>
                                                     <a
                                                         key={item.name}
                                                         onClick={() => {
@@ -161,7 +161,7 @@ export default function Sidebar() {
                 </Transition.Root>
 
                 {/* Static sidebar for desktop */}
-                <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 pt-50 overflow-auto">
+                <div className="hidden md:flex md:w-52 md:flex-col md:fixed md:inset-y-0 pt-50 overflow-auto">
                     <div className="flex-1 pt-4 flex flex-col min-h-0 border-r border-gray-200 bg-white">
                         {/* Solidus Logo in the Sidebar Desktop view */}
                         <Image src="/solidusLogo.svg" alt="Vercel Logo" width={150} height={55} />
@@ -169,7 +169,7 @@ export default function Sidebar() {
                             {/* Sidebar Navigation in Desktop view */}
                             <nav className="mt-10 flex-1 pt-1 px-2 bg-white space-y-1">
                                 {navigation.map((item) => (
-                                    <Link href={item.href} passHref>
+                                    <Link key={item.name} href={item.href} passHref>
                                         <a
                                             key={item.name}
                                             onClick={() => changeCurrent(navigation, item.name)}
@@ -197,7 +197,7 @@ export default function Sidebar() {
                         </div>
                         {/* Vercel logo in the Sidebar Desktop view */}
                         <a
-                            className="flex justify-center px-10 py-2 fixed  bottom-0"
+                            className="flex justify-center px-6 py-2 fixed  bottom-0"
                             href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
                             target="_blank"
                             rel="noopener noreferrer"

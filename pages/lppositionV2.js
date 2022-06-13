@@ -1,58 +1,121 @@
-import { NFT, Loading, Accordion, NewComp } from "web3uikit"
+import { Tooltip, Loading, Icon, useNotification } from "web3uikit"
 import { useMoralis } from "react-moralis"
 import { useEffect, useState } from "react"
 import Image from "next"
 
 export default function lppositionV2() {
     const { chainId, account } = useMoralis()
+
     const appId = "uniswap-v2"
+
     const chainIdNameMap = {
         "0x1": "ethereum",
         "0x89": "polygon",
     }
 
+    const options = {
+        user: "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
+        // user: "0x00e6f8d8fb80b0c302a6bd849b79982dc9945b15",
+        chainId: chainId,
+        appId: appId,
+    }
+
+    const dispatch = useNotification()
+
+    const handleNewNotification = (params) => {
+        dispatch({
+            type: params.type,
+            message: params.message,
+            title: params.title,
+            position: "topR",
+            icon: params.icon,
+        })
+    }
+
+    const fetchData = async () => {
+        try {
+            if (
+                chainId === undefined ||
+                chainId === null ||
+                chainIdNameMap[chainId] === null ||
+                chainIdNameMap[chainId] === undefined
+            ) {
+                const params = {
+                    type: "error",
+                    message: "This network is not supported",
+                    title: "Uniswap LP Position V2",
+                }
+                handleNewNotification(params)
+                setPositions([{}])
+                return
+            }
+
+            const response = await fetch(
+                `/api/lpV2/${options.appId}/${options.user}/${chainIdNameMap[options.chainId]}`
+            )
+            const data = await response.json()
+            console.log(data)
+            if (data.balances[options.user.toLowerCase()].error) {
+                const params = {
+                    type: "info",
+                    message: data.balances[options.user.toLowerCase()].error.message,
+                    title: "Uniswap LP Position V2",
+                }
+                handleNewNotification(params)
+                setPositions([{}])
+            } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
+                const params = {
+                    type: "warning",
+                    message: `No LP positions found on ${
+                        chainIdNameMap[chainId] ? chainIdNameMap[chainId] : chainId
+                    } chain for ${account}`,
+                    title: "Uniswap LP Position V2",
+                }
+                handleNewNotification(params)
+                setPositions([{}])
+            } else {
+                const params = {
+                    type: "success",
+                    message: "LP positions found",
+                    title: "Uniswap LP Position V2",
+                }
+                handleNewNotification(params)
+                setPositions(data.balances[options.user.toLowerCase()].products)
+            }
+        } catch (error) {
+            const params = {
+                type: "error",
+                message: error,
+                title: "Unexpected error",
+            }
+            handleNewNotification(params)
+            setPositions([{}])
+        }
+    }
+
     {
-        /* NFTs data, will update with an API call*/
+        /* LP Positions will update with an API call*/
     }
     const [poistions, setPositions] = useState([])
 
     useEffect(() => {
-        const tempNFTs = []
-        const fetchData = async () => {
-            const options = {
-                user: "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
-                // user: "0x00e6f8d8fb80b0c302a6bd849b79982dc9945b15",
-                chainId: chainId,
-                appId: appId,
-            }
-            try {
-                if (chainId === undefined || chainId === null) return
-
-                const response = await fetch(
-                    `/api/lpV2/${options.appId}/${options.user}/${chainIdNameMap[options.chainId]}`
-                )
-                const data = await response.json()
-                console.log(data)
-                if (data.balances[options.user.toLowerCase()].error) {
-                    alert(data.balances[options.user.toLowerCase()].error.message)
-                } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
-                    alert("No LP positions found")
-                    setPositions([{}])
-                } else setPositions(data.balances[options.user.toLowerCase()].products)
-            } catch (error) {
-                console.log(error)
-                alert(error)
-                tempNFTs = [{}]
-                setPositions(tempNFTs)
-            }
-        }
         fetchData()
     }, [account, chainId])
 
     return (
         <div>
+            <div className="flex mt-10">
+                <Tooltip
+                    content={`Uniswap V2 Liquidity Position for the wallet address ${
+                        options.user
+                    } on ${chainIdNameMap[options.chainId]} blockchain`}
+                    position="right"
+                >
+                    <Icon fill="#68738D" size={25} svg="helpCircle" />
+                </Tooltip>
+            </div>
             {poistions && poistions.length !== 0 ? (
-                <div className="px-1 py-16 sm:px-1 lg:px-1">
+                <div className="px-1 sm:px-1 lg:px-1">
                     <div className="mt-8 flex flex-col">
                         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div className="flex justify-center items-center min-w-max py-2 md:px-6 lg:px-8">

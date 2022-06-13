@@ -2,6 +2,7 @@ import "../styles/globals.css"
 import { MoralisProvider } from "react-moralis"
 import Head from "next/head"
 import Layout from "../components/Layout"
+import { NotificationProvider } from "web3uikit"
 function MyApp({ Component, pageProps }) {
     return (
         //{/* Moralis Provider to use use majority of WEB3 functions */}
@@ -16,9 +17,11 @@ function MyApp({ Component, pageProps }) {
             </Head>
 
             {/* Layout style to show Sidebar and Header in every view */}
-            <Layout>
-                <Component {...pageProps} />
-            </Layout>
+            <NotificationProvider>
+                <Layout>
+                    <Component {...pageProps} />
+                </Layout>
+            </NotificationProvider>
         </MoralisProvider>
     )
 }

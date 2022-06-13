@@ -38,8 +38,8 @@ export default function lppositionV3() {
             type: params.type,
             message: params.message,
             title: params.title,
-            position: "bottomL",
             icon: params.icon,
+            position: params.position || "bottomR",
         })
     }
 
@@ -54,7 +54,8 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                     icon: "exclamation",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
+                alert(params.message)
                 setNFTs([{}])
                 return
             }
@@ -70,7 +71,8 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                     icon: "exclamation",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
+                alert(params.message)
                 setNFTs([{}])
             } else if (data && data.result && data.result.length <= 0) {
                 const params = {
@@ -81,7 +83,8 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                     icon: "exclamation",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
+                alert(params.message)
                 setNFTs([{}])
             } else {
                 console.log(data.result)
@@ -92,7 +95,7 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                 }
                 if (data.result.length > 0 && NFTs.length < 1) {
-                    handleNewNotification(params)
+                    // handleNewNotification(params)
                 }
                 setNFTs(data.result)
             }
@@ -102,7 +105,8 @@ export default function lppositionV3() {
                 message: error,
                 title: "Unexpected error",
             }
-            handleNewNotification(params)
+            // handleNewNotification(params)
+            alert(params.message)
             setNFTs([{}])
         }
 

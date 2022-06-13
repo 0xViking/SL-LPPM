@@ -27,8 +27,8 @@ export default function lppositionV2() {
             type: params.type,
             message: params.message,
             title: params.title,
-            position: "bottomL",
             icon: params.icon,
+            position: params.position || "bottomR",
         })
     }
 
@@ -45,7 +45,8 @@ export default function lppositionV2() {
                     message: "This network is not supported",
                     title: "Uniswap LP Position V2",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
+                alert(params.message)
                 setPositions([{}])
                 return
             }
@@ -61,7 +62,8 @@ export default function lppositionV2() {
                     message: data.balances[options.user.toLowerCase()].error.message,
                     title: "Uniswap LP Position V2",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
+                alert(params.message)
                 setPositions([{}])
             } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
                 const params = {
@@ -71,7 +73,8 @@ export default function lppositionV2() {
                     } chain for ${account}`,
                     title: "Uniswap LP Position V2",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
+                alert(params.message)
                 setPositions([{}])
             } else {
                 const params = {
@@ -79,7 +82,7 @@ export default function lppositionV2() {
                     message: "LP positions found",
                     title: "Uniswap LP Position V2",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
                 setPositions(data.balances[options.user.toLowerCase()].products)
             }
         } catch (error) {
@@ -88,7 +91,8 @@ export default function lppositionV2() {
                 message: error,
                 title: "Unexpected error",
             }
-            handleNewNotification(params)
+            // handleNewNotification(params)
+            alert(params.message)
             setPositions([{}])
         }
     }

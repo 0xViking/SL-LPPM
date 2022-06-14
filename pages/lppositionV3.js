@@ -24,7 +24,7 @@ export default function lppositionV3() {
 
     const options = {
         user: account,
-        // user: "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
+        // user: "0xf4adb9ba51fde3eaee89ce9a60e99992611849fd",
         chainId: chainId,
         token_address: chainIdAddrMap[chainId]
             ? chainIdAddrMap[chainId]
@@ -39,7 +39,7 @@ export default function lppositionV3() {
             message: params.message,
             title: params.title,
             icon: params.icon,
-            position: params.position || "bottomR",
+            position: params.position || "topR",
         })
     }
 
@@ -54,7 +54,7 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                     icon: "exclamation",
                 }
-                // handleNewNotification(params)
+                handleNewNotification(params)
                 // alert(params.message)
                 setNFTs([{}])
                 return
@@ -71,20 +71,20 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                     icon: "exclamation",
                 }
-                // handleNewNotification(params)
-                alert(params.message)
+                handleNewNotification(params)
+                // alert(params.message)
                 setNFTs([{}])
             } else if (data && data.result && data.result.length <= 0) {
                 const params = {
                     type: "warning",
                     message: `No UNISWAP-V3 LP NFTs found on ${
                         chainIdNameMap[chainId] ? chainIdNameMap[chainId] : chainId
-                    } chain for ${account}`,
+                    } chain for ${options.user}`,
                     title: "Uniswap LP Position V3",
                     icon: "exclamation",
                 }
-                // handleNewNotification(params)
-                alert(params.message)
+                handleNewNotification(params)
+                // alert(params.message)
                 setNFTs([{}])
             } else {
                 console.log(data.result)
@@ -95,7 +95,7 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                 }
                 if (data.result.length > 0 && NFTs.length < 1) {
-                    // handleNewNotification(params)
+                    handleNewNotification(params)
                 }
                 setNFTs(data.result)
             }
@@ -105,8 +105,8 @@ export default function lppositionV3() {
                 message: error,
                 title: "Unexpected error",
             }
-            // handleNewNotification(params)
-            alert(params.message)
+            handleNewNotification(params)
+            // alert(params.message)
             setNFTs([{}])
         }
 

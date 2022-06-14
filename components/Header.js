@@ -8,7 +8,7 @@ export default function Header() {
     // console.log(parseInt(chainId))
     return (
         <div className=" flex fixed inset-x-0 ">
-            <div className="ml-auto py-4 ">
+            <div className="ml-auto py-4 mr-4">
                 <ConnectButton moralisAuth={false} />
             </div>
         </div>

@@ -15,7 +15,7 @@ export default function lppositionV2() {
 
     const options = {
         user: account,
-        // user: "0x00e6f8d8fb80b0c302a6bd849b79982dc9945b15",
+        // user: "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
         chainId: chainId,
         appId: appId,
     }
@@ -28,7 +28,7 @@ export default function lppositionV2() {
             message: params.message,
             title: params.title,
             icon: params.icon,
-            position: params.position || "bottomR",
+            position: params.position || "topR",
         })
     }
 
@@ -45,7 +45,7 @@ export default function lppositionV2() {
                     message: "This network is not supported",
                     title: "Uniswap LP Position V2",
                 }
-                // handleNewNotification(params)
+                handleNewNotification(params)
                 // alert(params.message)
                 setPositions([{}])
                 return
@@ -62,19 +62,19 @@ export default function lppositionV2() {
                     message: data.balances[options.user.toLowerCase()].error.message,
                     title: "Uniswap LP Position V2",
                 }
-                // handleNewNotification(params)
-                alert(params.message)
+                handleNewNotification(params)
+                // alert(params.message)
                 setPositions([{}])
             } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
                 const params = {
                     type: "warning",
                     message: `No LP positions found on ${
                         chainIdNameMap[chainId] ? chainIdNameMap[chainId] : chainId
-                    } chain for ${account}`,
+                    } chain for ${options.user}`,
                     title: "Uniswap LP Position V2",
                 }
-                // handleNewNotification(params)
-                alert(params.message)
+                handleNewNotification(params)
+                // alert(params.message)
                 setPositions([{}])
             } else {
                 const params = {
@@ -82,7 +82,7 @@ export default function lppositionV2() {
                     message: "LP positions found",
                     title: "Uniswap LP Position V2",
                 }
-                // handleNewNotification(params)
+                handleNewNotification(params)
                 setPositions(data.balances[options.user.toLowerCase()].products)
             }
         } catch (error) {
@@ -91,8 +91,8 @@ export default function lppositionV2() {
                 message: error,
                 title: "Unexpected error",
             }
-            // handleNewNotification(params)
-            alert(params.message)
+            handleNewNotification(params)
+            // alert(params.message)
             setPositions([{}])
         }
     }

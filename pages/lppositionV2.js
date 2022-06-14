@@ -1,12 +1,23 @@
-import { Tooltip, Loading, Icon, useNotification } from "web3uikit"
 import { useMoralis } from "react-moralis"
 import { useEffect, useState } from "react"
-import Image from "next"
+import {
+    Tooltip,
+    Loading,
+    Icon,
+    useNotification,
+    Modal,
+    Typography,
+    Table,
+    Avatar,
+    Tag,
+} from "web3uikit"
 
 export default function lppositionV2() {
     const { chainId, account } = useMoralis()
 
     const appId = "uniswap-v2"
+
+    const [modalVisible, setModalVisible] = useState(false)
 
     const chainIdNameMap = {
         "0x1": "ethereum",
@@ -28,7 +39,7 @@ export default function lppositionV2() {
             message: params.message,
             title: params.title,
             icon: params.icon,
-            position: params.position || "topR",
+            position: params.position || "bottomR",
         })
     }
 
@@ -95,6 +106,133 @@ export default function lppositionV2() {
             // alert(params.message)
             setPositions([{}])
         }
+    }
+
+    const timeConverter = (UNIX_timestamp) => {
+        var a = new Date(UNIX_timestamp * 1000)
+        var months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ]
+        var year = a.getFullYear()
+        var month = months[a.getMonth()]
+        var date = a.getDate()
+        var hour = a.getHours()
+        var min = a.getMinutes()
+        var sec = a.getSeconds()
+        var time = date + " " + month + " " + year + " " + hour + ":" + min + ":" + sec
+        return time
+    }
+
+    const unixTiem = 1600790245
+    const [tableData, setTableData] = useState([
+        // [
+        //     "0xeb514ade3c65dc5aeb9489e15604e0a4f92ff163a6de865b93db0f68faa9475f",
+        //     timeConverter(unixTiem),
+        //     "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
+        //     "0x3933d871588063cc39f297b1a1e288067f4cc004",
+        //     "1388219288062472427",
+        // ],
+    ])
+
+    const checkInOROut = (to) => {
+        return options.user.toLowerCase() === to.toLowerCase() ? "IN" : "OUT"
+    }
+
+    const checkColor = (to) => {
+        return options.user.toLowerCase() === to.toLowerCase() ? "green" : "red"
+    }
+
+    const getURL = (user, address, contract_address) => {
+        return address.toLowerCase() != user.toLowerCase()
+            ? `https://etherscan.io/address/${address}`
+            : `https://etherscan.io/token/${contract_address}?a=${user}`
+    }
+
+    const showModal = async (contractAddr) => {
+        try {
+            setModalVisible(true)
+            const resArr = []
+            const response = await fetch(`/api/v2logs/${contractAddr}/${options.user}`)
+            const data = await response.json()
+            console.log(data)
+            data.result.map((item) => {
+                resArr.push([
+                    <Tooltip content={item.hash} position="right">
+                        <a
+                            href={`https://etherscan.io/tx/${item.hash}`}
+                            className="text-blue-400"
+                            target="blank"
+                        >
+                            {item.hash.substring(0, 20) + "..."}
+                        </a>
+                    </Tooltip>,
+                    timeConverter(item.timeStamp),
+                    <Tooltip content={item.from} position="top">
+                        <a
+                            href={getURL(options.user, item.from, contractAddr)}
+                            className="text-blue-400"
+                            target="blank"
+                        >
+                            {item.from.substring(0, 20) + "..."}
+                        </a>
+                    </Tooltip>,
+                    <div className="flex justify-center">
+                        <Tag color={checkColor(item.to)} text={checkInOROut(item.to)} />
+                    </div>,
+                    <Tooltip content={item.to} position="left">
+                        <a
+                            href={getURL(options.user, item.to, contractAddr)}
+                            className="text-blue-400"
+                            target="blank"
+                        >
+                            {item.to.substring(0, 20) + "..."}
+                        </a>
+                    </Tooltip>,
+                    (item.value / 1000000000000000000)
+                        .toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })
+                        .replace(/\.0+$/, ""),
+                ])
+            })
+            setTableData(resArr)
+            console.log(tableData)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const getTable = () => {
+        return (
+            <Table
+                columnsConfig="3fr 3fr 3fr 80px 3fr 80px"
+                data={tableData}
+                header={[
+                    <span>Txn Hash</span>,
+                    <span>Date</span>,
+                    <span>From</span>,
+                    "",
+                    <span>To</span>,
+                    <span>Quantity</span>,
+                ]}
+                isColumnSortable={[false, true, false, false]}
+                maxPages={1}
+                noPagination
+                onPageNumberChanged={function noRefCheck() {}}
+                pageSize={1}
+            />
+        )
     }
 
     {
@@ -192,14 +330,35 @@ export default function lppositionV2() {
                                                             {index + 1}
                                                         </td>
                                                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            {position.displayProps.label}
-                                                            {"(" +
-                                                                position.displayProps
-                                                                    .secondaryLabel +
-                                                                ")"}
+                                                            <div className="flex justify-start">
+                                                                <a
+                                                                    className="mr-2 cursor-pointer cursor-hand"
+                                                                    onClick={() => {
+                                                                        showModal(position.address)
+                                                                    }}
+                                                                >
+                                                                    <Icon
+                                                                        fill="#68738D"
+                                                                        size={20}
+                                                                        svg="list"
+                                                                    />
+                                                                </a>
+                                                                {position.displayProps.label}
+                                                            </div>
                                                         </td>
                                                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            {position.tokens[0].symbol}
+                                                            <div className="flex justify-start">
+                                                                {position.tokens[0].symbol}
+                                                                <img
+                                                                    src={
+                                                                        position.displayProps
+                                                                            .images[0]
+                                                                    }
+                                                                    width={20}
+                                                                    height={20}
+                                                                    className="ml-1"
+                                                                />
+                                                            </div>
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                                             {position.tokens[0].balance.toLocaleString(
@@ -214,7 +373,18 @@ export default function lppositionV2() {
                                                             {")"}
                                                         </td>
                                                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            {position.tokens[1].symbol}
+                                                            <div className="flex justify-start">
+                                                                {position.tokens[1].symbol}
+                                                                <img
+                                                                    src={
+                                                                        position.displayProps
+                                                                            .images[1]
+                                                                    }
+                                                                    width={20}
+                                                                    height={20}
+                                                                    className="ml-1"
+                                                                />
+                                                            </div>
                                                         </td>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                                             {position.tokens[1].balance.toLocaleString(
@@ -275,6 +445,37 @@ export default function lppositionV2() {
                     </div>
                 </div>
             )}
+            <Modal
+                id="regular"
+                isVisible={modalVisible}
+                onCloseButtonPressed={function noRefCheck() {
+                    setModalVisible(false)
+                }}
+                onOk={function noRefCheck() {}}
+                hasFooter={false}
+                title={
+                    <div style={{ display: "flex", gap: 10 }}>
+                        <Icon fill="#68738D" size={28} svg="list" />
+                        <Typography color="#68738D" variant="h3">
+                            Your Txns History in this pool
+                        </Typography>
+                    </div>
+                }
+            >
+                {tableData && tableData.length > 1 ? (
+                    <div className="pb-4">{getTable()}</div>
+                ) : (
+                    <div className="flex justify-center py-8">
+                        <Loading
+                            fontSize={20}
+                            size={40}
+                            spinnerColor="#2E7DAF"
+                            spinnerType="loader"
+                            text="Loading..."
+                        />
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

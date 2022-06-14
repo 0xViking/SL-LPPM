@@ -17,7 +17,7 @@ export default function doggie() {
                     <Icon fill="#68738D" size={25} svg="helpCircle" />
                 </Tooltip>
             </div>
-            <div className="mt-4 px-8">
+            <div className="mt-4 px-8 py-4">
                 {/* as of now shows all the ethereum NFTs of the wallet on the chain connected to */}
                 <NFTBalance
                     chain={chainId}

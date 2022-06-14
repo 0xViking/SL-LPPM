@@ -44,4 +44,19 @@ Day 1 :
 2.V3 Positions page showing current Postions NFTs in the wallet address given:
 
  ![image](https://user-images.githubusercontent.com/72988597/173391153-57846846-0c8b-4acd-8726-fe9cdb610e28.png)
+ 
+ 
+ 
+ ### Status-5 (14-06-2022) ~ 5hrs work:
+ * Fixed issue with the styled-components in nextjs
+ * Notifications will be shown in bottom right of the screen
+ * On V2 postions page a table will be shown with positions the address is holding, now at the starting there is a ICON(list) in the name tab, If you click on it a modal will be shown with all the logs of the user for that pool
 
+1. Notifications on the bottom right & List icon to show logs of user for each pool the address holding a position:
+
+ ![image](https://user-images.githubusercontent.com/72988597/173703096-6bf35452-1dc4-4f85-b0ee-e6d8934f83e6.png)
+
+
+2.After clicking on the list icon for any of the pool it pops a modal with the history of that address in the pool:
+
+![image](https://user-images.githubusercontent.com/72988597/173703257-c042790c-c9d4-4beb-89eb-2eebcce82048.png)

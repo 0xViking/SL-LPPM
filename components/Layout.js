@@ -6,10 +6,10 @@ export default function Layout({ children }) {
         <div className="flex flex-col-2">
             {/* Showing sidebar in every view */}
             <Sidebar />
-            <div>
+            <div className="flex-1">
                 {/* Showing header in every view */}
                 <Header />
-                {children}
+                <div className="p-4">{children}</div>
             </div>
         </div>
     )

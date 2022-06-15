@@ -22,6 +22,27 @@ export default function lppositionV3() {
     //React state variable -  NFTs data, which will update everytime with a fetchData call from Moralis WEB3 API
     const [NFTs, setNFTs] = useState([])
 
+    //React state variable -  NFTs data, which will update when user clicks on SHOW MORE button
+    const [displayNFTs, setDisplayNFTs] = useState([])
+
+    //page number to update the NFTs displaying when user clicks on SHOW MORE button
+    const [page, setPage] = useState(1)
+
+    //Function that handles the setting of the NFTs data to display when user clicks on SHOW MORE button
+    const handleSettingDisplayNFTs = () => {
+        const startingIndex = (page - 1) * 10
+
+        setDisplayNFTs((prevNFTs) => [
+            ...prevNFTs,
+            ...NFTs.slice(startingIndex, startingIndex + 10),
+        ])
+    }
+
+    //Function which triggers the state change of page number when user clicks on SHOW MORE button
+    const handleShowMoreAction = () => {
+        setPage((prevPage) => prevPage + 1)
+    }
+
     //React state variable - The address which is searched for
     const [showingAddress, setShowingAddress] = useState("")
 
@@ -30,6 +51,9 @@ export default function lppositionV3() {
 
     //Reatct state varibale to toggle the Modal(which asks user to enter an address to serach for) visiblity
     const [addressModalVisible, setAddressModalVisible] = useState(false)
+
+    //React state variable - Indiactes whether to show loading or not
+    const [loading, setLoading] = useState(false)
 
     //Conrtact Address of V3-Positions NFT for corresponding chainId. Supporting only ethereum and polygon
     const chainIdAddrMap = {
@@ -81,6 +105,14 @@ export default function lppositionV3() {
             }
             handleNewNotification(params)
             return
+        } else if (addressGiven.toLowerCase() === showingAddress.toLowerCase()) {
+            const params = {
+                type: "warning",
+                message: "Showing For the same address",
+                title: "Uniswap LP Position V3",
+            }
+            handleNewNotification(params)
+            return
         }
         addressGiven = addressGiven.toLowerCase().trim()
         if (addressGiven.length !== 42) {
@@ -108,10 +140,12 @@ export default function lppositionV3() {
                     icon: "exclamation",
                 }
                 handleNewNotification(params)
-                setNFTs([{}, {}, {}, {}])
+                setNFTs([])
+                setLoading(false)
                 return
             }
             setNFTs([])
+            setLoading(true)
             const response = await fetch(
                 `/api/lpV3/${options.user}/${options.token_address}/${options.chainId}`
             )
@@ -124,8 +158,8 @@ export default function lppositionV3() {
                     icon: "exclamation",
                 }
                 handleNewNotification(params)
-                // alert(params.message)
-                setNFTs([{}, {}, {}, {}])
+                setNFTs([])
+                setLoading(false)
             } else if (data && data.result && data.result.length <= 0) {
                 const params = {
                     type: "warning",
@@ -136,8 +170,8 @@ export default function lppositionV3() {
                     icon: "exclamation",
                 }
                 handleNewNotification(params)
-                // alert(params.message)
-                setNFTs([{}, {}, {}, {}])
+                setNFTs([])
+                setLoading(false)
             } else {
                 console.log(data.result)
 
@@ -150,6 +184,7 @@ export default function lppositionV3() {
                     handleNewNotification(params)
                 }
                 setNFTs(data.result)
+                setLoading(false)
             }
         } catch (error) {
             const params = {
@@ -158,8 +193,8 @@ export default function lppositionV3() {
                 title: "Unexpected error",
             }
             handleNewNotification(params)
-            // alert(params.message)
-            setNFTs([{}, {}, {}, {}])
+            setNFTs([])
+            setLoading(false)
         }
     }
 
@@ -177,14 +212,23 @@ export default function lppositionV3() {
         )
     }
 
+    //React hook to display more NFTs when page number or react state variable NFTs changes
+    useEffect(() => {
+        if (!NFTs || NFTs?.length < 1) {
+            return
+        }
+        handleSettingDisplayNFTs()
+    }, [NFTs, page])
+
     //Reacat hook to fetch the V3-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
         fetchData(account)
+        setLoading(true)
     }, [account, chainId])
 
     return (
         <div>
-            <div className="flex justify-between mt-16">
+            <div className="flex justify-between">
                 {NFTs && NFTs.length !== 0 ? (
                     <div className="mt-2">
                         {/* the "?" ICON showed on the top left of the NFTs which discribes the details */}
@@ -206,17 +250,17 @@ export default function lppositionV3() {
                     />
                 </div>
             </div>
-            {NFTs && NFTs.length !== 0 ? (
+            {!loading || (displayNFTs && displayNFTs.length !== 0) ? (
                 <div>
-                    <div className="py-4">
+                    <div className="pt-4">
                         <ul
                             role="list"
-                            className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-x-10 md:grid-cols-2 md:gap-x-8 lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-4 xl:gap-x-8"
+                            className="grid grid-cols-1 gap-x-8 gap-y-8 sm:gap-x-10 md:grid-cols-2 md:gap-x-8 xl:grid-cols-4 xl:gap-x-8"
                         >
                             {/* This is the NFTs Displaying for Uniswap Liquidity V3 Positions */}
-                            {NFTs &&
-                                NFTs.length > 0 &&
-                                NFTs.map((nft) => (
+                            {displayNFTs &&
+                                displayNFTs.length > 0 &&
+                                displayNFTs.map((nft) => (
                                     <li
                                         key={nft.token_hash}
                                         className="p-2 relative border-2 border-r-4 border-t-4 rounded-lg shadow-lg"
@@ -235,6 +279,31 @@ export default function lppositionV3() {
                                     </li>
                                 ))}
                         </ul>
+                        {NFTs &&
+                            NFTs.length > 0 &&
+                            displayNFTs &&
+                            displayNFTs.length > 0 &&
+                            NFTs.length !== displayNFTs.length && (
+                                //Show more button to show more NFTs if the user has more NFTs than the displayNFTs
+                                <div className="flex justify-center pt-4 w-full">
+                                    <Button
+                                        id="showMoreNFTs"
+                                        onClick={() => {
+                                            handleShowMoreAction()
+                                        }}
+                                        text="Show more"
+                                        theme="secondary"
+                                        type="button"
+                                    />
+                                </div>
+                            )}
+                        {displayNFTs.length == 0 && (
+                            //Shows this message if the user has no NFTs
+                            <div className="flex justify-center font-bold text-2xl text-blue-400">
+                                {" "}
+                                No Postions Found
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (
@@ -251,19 +320,20 @@ export default function lppositionV3() {
                     </div>
                 </div>
             )}
-            <div>
+            <div className={`w-full h-full fixed z-30 ${addressModalVisible ? "" : "hidden"}`}>
                 {/* Modal to ask user to enter an address to search V3-LP position for*/}
                 <Modal
                     id="addressModal"
                     isVisible={addressModalVisible}
                     hasCancel={false}
-                    okText="Check L2 Postions"
+                    okText="Check V3 Postions"
                     onCloseButtonPressed={function noRefCheck() {
                         setAddressModalVisible(false)
                     }}
                     onOk={() => {
                         setAddressModalVisible(false)
                         fetchData(inputAddrValue)
+                        setLoading(true)
                     }}
                     title={
                         <div style={{ display: "flex", gap: 10 }}>

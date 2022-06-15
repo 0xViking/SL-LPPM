@@ -9,8 +9,8 @@ export default function doggie() {
 
     return (
         <div>
-            <div className="mt-4 px-8 py-4 justify-center">
-                <div className="flex mt-10">
+            <div className="ml-4 justify-center">
+                <div className="flex">
                     <Tooltip
                         content={`All NFTs in the wallet ${account} on ${chainIdNameMap[chainId]} blockchain`}
                         position="right"

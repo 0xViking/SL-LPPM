@@ -26,6 +26,9 @@ export default function lppositionV2() {
     //React state variable - This is an array which stores the LP positions of the address
     const [positions, setPositions] = useState([])
 
+    //React state variable - This is an array of rows to be displayed in the table
+    const [positionsTableData, setPositionsTableData] = useState([])
+
     //React state variable - This is an array which stores the History of Txns in the V2-LP pool for which the address has positions in
     const [tableData, setTableData] = useState([])
 
@@ -40,6 +43,9 @@ export default function lppositionV2() {
 
     //React state variable - The address which is searched for
     const [showingAddress, setShowingAddress] = useState("")
+
+    //React state varibale - Shows whether its loading or not
+    const [loading, setLoading] = useState(false)
 
     //Name of chain for corresponding chainId. Supporting only ethereum and polygon
     const chainIdNameMap = {
@@ -82,7 +88,14 @@ export default function lppositionV2() {
                 icon: "exclamation",
             }
             handleNewNotification(params)
-            // setPositions([{}])
+            return
+        } else if (addressGiven.toLowerCase() === showingAddress.toLowerCase()) {
+            const params = {
+                type: "warning",
+                message: "Showing For the same address",
+                title: "Uniswap LP Position V2",
+            }
+            handleNewNotification(params)
             return
         }
         addressGiven = addressGiven.toLowerCase().trim()
@@ -94,7 +107,6 @@ export default function lppositionV2() {
                 icon: "exclamation",
             }
             handleNewNotification(params)
-            // setPositions([{}])
             return
         }
         options.user = addressGiven
@@ -112,15 +124,17 @@ export default function lppositionV2() {
                     title: "Uniswap LP Position V2",
                 }
                 handleNewNotification(params)
-                setPositions([{}])
+                setPositions([])
                 return
             }
             setPositions([])
+            setLoading(true)
             const response = await fetch(
                 `/api/lpV2/${options.appId}/${options.user}/${chainIdNameMap[options.chainId]}`
             )
             const data = await response.json()
             console.log(data)
+            setLoading(false)
             if (data.error) {
                 const params = {
                     type: "error",
@@ -136,9 +150,9 @@ export default function lppositionV2() {
                     title: "Uniswap LP Position V2",
                 }
                 handleNewNotification(params)
-                setPositions([{}])
+                setPositions([])
             } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
-                setPositions([{}])
+                setPositions([])
                 const params = {
                     type: "warning",
                     message: `No LP positions found on ${
@@ -147,7 +161,8 @@ export default function lppositionV2() {
                     title: "Uniswap LP Position V2",
                 }
                 handleNewNotification(params)
-                setPositions([{}])
+                setPositions([])
+                setLoading(false)
             } else {
                 const params = {
                     type: "success",
@@ -156,6 +171,7 @@ export default function lppositionV2() {
                 }
                 handleNewNotification(params)
                 setPositions(data.balances[options.user.toLowerCase()].products)
+                setPositionsData(data.balances[options.user.toLowerCase()].products)
             }
         } catch (error) {
             const params = {
@@ -164,7 +180,7 @@ export default function lppositionV2() {
                 title: "Unexpected error",
             }
             handleNewNotification(params)
-            setPositions([{}])
+            setPositions([])
         }
     }
 
@@ -215,9 +231,10 @@ export default function lppositionV2() {
     //Function which fetches the Txn logs and triggers the Modal to display the logs as a table
     const showModal = async (contractAddr) => {
         try {
+            setTableData([])
             setModalVisible(true)
             const resArr = []
-            const response = await fetch(`/api/v2logs/${contractAddr}/${showingAddress}`)
+            const response = await fetch(`/api/v2logs/${contractAddr}/${options.user}`)
             const data = await response.json()
             console.log(data)
             data.result.map((item) => {
@@ -279,7 +296,7 @@ export default function lppositionV2() {
                     <span>To</span>,
                     <span>Quantity</span>,
                 ]}
-                isColumnSortable={[false, true, false, false]}
+                isColumnSortable={[false, false, false, false, false, false]}
                 maxPages={1}
                 noPagination
                 onPageNumberChanged={function noRefCheck() {}}
@@ -302,6 +319,112 @@ export default function lppositionV2() {
         )
     }
 
+    //Generates the Array of rows which is required for the table to display the LP positions
+    const setPositionsData = (givenPostions) => {
+        let responseArr = []
+        givenPostions &&
+            givenPostions.length > 0 &&
+            givenPostions[0].assets.forEach((element) => {
+                responseArr.push([
+                    <div className="flex justify-start">
+                        <a
+                            className="mr-2 cursor-pointer cursor-hand"
+                            onClick={() => {
+                                showModal(element.address)
+                            }}
+                        >
+                            <Icon fill="#68738D" size={20} svg="list" />
+                        </a>
+                        {element.displayProps.label}
+                    </div>,
+                    <div className="flex justify-start">
+                        {element.tokens[0].symbol}
+                        <img
+                            src={element.displayProps.images[0]}
+                            width={20}
+                            height={20}
+                            className="ml-1"
+                        />
+                    </div>,
+                    <div>
+                        {element.tokens[0].balance.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                        {"($"}
+                        {element.tokens[0].balanceUSD.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                        {")"}
+                    </div>,
+                    <div className="flex justify-start">
+                        {element.tokens[1].symbol}
+                        <img
+                            src={element.displayProps.images[1]}
+                            width={20}
+                            height={20}
+                            className="ml-1"
+                        />
+                    </div>,
+                    <div>
+                        {element.tokens[1].balance.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                        {"($"}
+                        {element.tokens[1].balanceUSD.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                        {")"}
+                    </div>,
+                    <div>
+                        {element.displayProps.statsItems[0].value.value.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                    </div>,
+                    <div>
+                        {element.displayProps.statsItems[2].value.value.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                        {"%"}
+                    </div>,
+                    <div>
+                        {element.displayProps.statsItems[3].value.value.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })}
+                        {"%($"}
+                        {element.balanceUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        {")"}
+                    </div>,
+                ])
+            })
+        console.log(responseArr)
+        setPositionsTableData(responseArr)
+    }
+
+    //Returns the table of LP positions
+    const getPositionsTable = () => {
+        return (
+            <Table
+                columnsConfig="2fr 1fr 2fr 1fr 2fr 2fr 1fr 1fr"
+                data={positionsTableData}
+                header={[
+                    <span>Liquidity Pool</span>,
+                    <span>Token-1</span>,
+                    <span>Toekn-1 Balance</span>,
+                    <span>Token-2</span>,
+                    <span>Toekn-2 Balance</span>,
+                    <span>Total Liquidity in Pool($)</span>,
+                    <span>Fee %</span>,
+                    <span>Your share</span>,
+                ]}
+                isColumnSortable={[false, false, false, false, false, false, false]}
+                maxPages={1}
+                noPagination
+                onPageNumberChanged={function noRefCheck() {}}
+                pageSize={1}
+            />
+        )
+    }
+
     //React hook to fetch the V2-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
         fetchData(account)
@@ -309,9 +432,9 @@ export default function lppositionV2() {
 
     return (
         <div>
-            <div className="flex justify-between mt-16">
+            <div className="flex justify-between">
                 {positions && positions.length !== 0 ? (
-                    <div className="mt-2">
+                    <div>
                         {/* the "?" ICON showed on the top left of the table which discribes the details */}
                         {getToolTip()}
                     </div>
@@ -331,183 +454,8 @@ export default function lppositionV2() {
                     />
                 </div>
             </div>
-            {positions && positions.length !== 0 ? (
-                <div className="px-1 sm:px-1 lg:px-1">
-                    <div className="mt-2 flex flex-col">
-                        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                            <div className="flex justify-center items-center min-w-max py-2 md:px-6 lg:px-8">
-                                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg border-2 border-r-4 border-t-4 rounded-lg">
-                                    {/* The table which displays the LP positions */}
-                                    <table className="min-w-min divide-y divide-gray-300">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th
-                                                    scope="col"
-                                                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                                >
-                                                    #
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                                                >
-                                                    Liquidity Pool
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                                                >
-                                                    Token 1
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                                >
-                                                    Token 1 Balance
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                                                >
-                                                    Token 2
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                                >
-                                                    Token 2 Balance
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                                                >
-                                                    Total Liquidity in Pool($)
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                                >
-                                                    Fee %
-                                                </th>
-                                                <th
-                                                    scope="col"
-                                                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                                >
-                                                    Your share
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200 bg-white">
-                                            {positions[0].assets &&
-                                                positions[0].assets.map((position, index) => (
-                                                    // +item.address,
-                                                    <tr>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {index + 1}
-                                                        </td>
-                                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            <div className="flex justify-start">
-                                                                <a
-                                                                    className="mr-2 cursor-pointer cursor-hand"
-                                                                    onClick={() => {
-                                                                        showModal(position.address)
-                                                                    }}
-                                                                >
-                                                                    <Icon
-                                                                        fill="#68738D"
-                                                                        size={20}
-                                                                        svg="list"
-                                                                    />
-                                                                </a>
-                                                                {position.displayProps.label}
-                                                            </div>
-                                                        </td>
-                                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            <div className="flex justify-start">
-                                                                {position.tokens[0].symbol}
-                                                                <img
-                                                                    src={
-                                                                        position.displayProps
-                                                                            .images[0]
-                                                                    }
-                                                                    width={20}
-                                                                    height={20}
-                                                                    className="ml-1"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {position.tokens[0].balance.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {"($"}
-                                                            {position.tokens[0].balanceUSD.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {")"}
-                                                        </td>
-                                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            <div className="flex justify-start">
-                                                                {position.tokens[1].symbol}
-                                                                <img
-                                                                    src={
-                                                                        position.displayProps
-                                                                            .images[1]
-                                                                    }
-                                                                    width={20}
-                                                                    height={20}
-                                                                    className="ml-1"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {position.tokens[1].balance.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {"($"}
-                                                            {position.tokens[1].balanceUSD.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {")"}
-                                                        </td>
-                                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            {position.displayProps.statsItems[0].value.value.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {position.displayProps.statsItems[2].value.value.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {"%"}
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {position.displayProps.statsItems[3].value.value.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {"%($"}
-                                                            {position.balanceUSD.toLocaleString(
-                                                                "en-US",
-                                                                { minimumFractionDigits: 2 }
-                                                            )}
-                                                            {")"}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {!loading || (positionsTableData && positionsTableData.length !== 0) ? (
+                <div className="py-4">{getPositionsTable()}</div>
             ) : (
                 <div className="grid place-items-center h-screen w-full px-96 mr-60">
                     <div>
@@ -522,47 +470,49 @@ export default function lppositionV2() {
                     </div>
                 </div>
             )}
-            {/* Modal to show txn logs in particular pool*/}
-            <Modal
-                id="LogsModal"
-                isVisible={modalVisible}
-                onCloseButtonPressed={function noRefCheck() {
-                    setModalVisible(false)
-                }}
-                onOk={function noRefCheck() {}}
-                hasFooter={false}
-                title={
-                    <div style={{ display: "flex", gap: 10 }}>
-                        <Icon fill="#68738D" size={28} svg="list" />
-                        <Typography color="#68738D" variant="h3">
-                            Your Txns History in the pool
-                        </Typography>
-                    </div>
-                }
-            >
-                {/* Table which shows txn logs in particular pool*/}
-                {tableData && tableData.length > 1 ? (
-                    <div className="pb-4">{getTable()}</div>
-                ) : (
-                    <div className="flex justify-center py-8">
-                        {/* Shows Loading animation while fetching the Txn logs in the pool */}
-                        <Loading
-                            fontSize={20}
-                            size={40}
-                            spinnerColor="#2E7DAF"
-                            spinnerType="loader"
-                            text="Loading..."
-                        />
-                    </div>
-                )}
-            </Modal>
-            <div>
+            <div className={`w-full h-full fixed z-30 ${modalVisible ? "" : "hidden"}`}>
+                {/* Modal to show txn logs in particular pool*/}
+                <Modal
+                    id="LogsModal"
+                    isVisible={modalVisible}
+                    onCloseButtonPressed={function noRefCheck() {
+                        setModalVisible(false)
+                    }}
+                    onOk={function noRefCheck() {}}
+                    hasFooter={false}
+                    title={
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <Icon fill="#68738D" size={28} svg="list" />
+                            <Typography color="#68738D" variant="h3">
+                                Your Txns History in the pool
+                            </Typography>
+                        </div>
+                    }
+                >
+                    {/* Table which shows txn logs in particular pool*/}
+                    {tableData && tableData.length > 1 ? (
+                        <div className="pb-4">{getTable()}</div>
+                    ) : (
+                        <div className="flex justify-center py-8">
+                            {/* Shows Loading animation while fetching the Txn logs in the pool */}
+                            <Loading
+                                fontSize={20}
+                                size={40}
+                                spinnerColor="#2E7DAF"
+                                spinnerType="loader"
+                                text="Loading..."
+                            />
+                        </div>
+                    )}
+                </Modal>
+            </div>
+            <div className={`w-full h-full fixed z-30 ${addressModalVisible ? "" : "hidden"}`}>
                 {/* Modal to ask user to enter an address to search V2-LP position for*/}
                 <Modal
                     id="addressModal"
                     isVisible={addressModalVisible}
                     hasCancel={false}
-                    okText="Check L2 Postions"
+                    okText="Check V2 Postions"
                     onCloseButtonPressed={function noRefCheck() {
                         setAddressModalVisible(false)
                         if (
@@ -571,7 +521,7 @@ export default function lppositionV2() {
                             positions[0].assets &&
                             positions[0].assets.length <= 1
                         ) {
-                            setPositions([{}])
+                            setPositions([])
                         }
                     }}
                     onOk={() => {

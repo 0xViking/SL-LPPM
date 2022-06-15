@@ -34,7 +34,7 @@ export default function Sidebar() {
 
     return (
         <>
-            <div>
+            <div className="h-full">
                 {/* Moving Sidebar mobile view */}
                 <Transition.Root show={sidebarOpen} as={Fragment}>
                     <Dialog as="div" className="relative z-40 md:hidden" onClose={setSidebarOpen}>
@@ -155,58 +155,70 @@ export default function Sidebar() {
                 </Transition.Root>
 
                 {/* Static sidebar for desktop */}
-                <div className="hidden md:flex md:w-52 md:flex-col md:fixed md:inset-y-0 pt-50 overflow-auto">
-                    <div className="flex-1 pt-4 flex flex-col min-h-0 border-r border-gray-200 bg-white">
-                        {/* Solidus Logo in the Sidebar Desktop view */}
-                        <Image src="/solidusLogo.svg" alt="Vercel Logo" width={150} height={55} />
-                        <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-                            {/* Sidebar Navigation in Desktop view */}
-                            <nav className="mt-10 flex-1 pt-1 px-2 bg-white space-y-1">
-                                {navigation.map((item) => (
-                                    <Link key={item.name} href={item.href} passHref>
-                                        <a
-                                            key={item.name}
-                                            onClick={() => changeCurrent(navigation, item.name)}
-                                            className={classNames(
-                                                item.current
-                                                    ? "bg-gray-100 text-gray-900"
-                                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                                                "group flex items-center px-2 py-2 text-sm font-medium rounded-md"
-                                            )}
-                                        >
-                                            <item.icon
+                <div className="hidden h-full md:block md:w-52">
+                    <div className="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:w-52 pt-50 overflow-auto">
+                        <div className="flex-1 pt-4 flex flex-col min-h-0 border-r border-gray-200 bg-white">
+                            {/* Solidus Logo in the Sidebar Desktop view */}
+                            <Image
+                                src="/solidusLogo.svg"
+                                alt="Vercel Logo"
+                                width={150}
+                                height={55}
+                            />
+                            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+                                {/* Sidebar Navigation in Desktop view */}
+                                <nav className="mt-10 flex-1 pt-1 px-2 bg-white space-y-1">
+                                    {navigation.map((item) => (
+                                        <Link key={item.name} href={item.href} passHref>
+                                            <a
+                                                key={item.name}
+                                                onClick={() => changeCurrent(navigation, item.name)}
                                                 className={classNames(
                                                     item.current
-                                                        ? "text-gray-500"
-                                                        : "text-gray-400 group-hover:text-gray-500",
-                                                    "mr-3 flex-shrink-0 h-6 w-6"
+                                                        ? "bg-gray-100 text-gray-900"
+                                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                                                    "group flex items-center px-2 py-2 text-sm font-medium rounded-md"
                                                 )}
-                                                aria-hidden="true"
-                                            />
-                                            {item.name}
-                                        </a>
-                                    </Link>
-                                ))}
-                            </nav>
+                                            >
+                                                <item.icon
+                                                    className={classNames(
+                                                        item.current
+                                                            ? "text-gray-500"
+                                                            : "text-gray-400 group-hover:text-gray-500",
+                                                        "mr-3 flex-shrink-0 h-6 w-6"
+                                                    )}
+                                                    aria-hidden="true"
+                                                />
+                                                {item.name}
+                                            </a>
+                                        </Link>
+                                    ))}
+                                </nav>
+                            </div>
+                            {/* Vercel logo in the Sidebar Desktop view */}
+                            <a
+                                className="flex justify-center px-6 py-2 fixed  bottom-0"
+                                href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Powered by{" "}
+                                <span className="px-1 py-1">
+                                    <Image
+                                        src="/vercel.svg"
+                                        alt="Vercel Logo"
+                                        width={72}
+                                        height={16}
+                                    />
+                                </span>
+                            </a>
                         </div>
-                        {/* Vercel logo in the Sidebar Desktop view */}
-                        <a
-                            className="flex justify-center px-6 py-2 fixed  bottom-0"
-                            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Powered by{" "}
-                            <span className="px-1 py-1">
-                                <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-                            </span>
-                        </a>
                     </div>
                 </div>
 
                 {/* Menu Icon in Mobile View */}
-                <div className="md:pl-64 flex flex-col flex-1">
-                    <div className="fixed top-0 z-10 md:hidden pl-3 pt-3 bg-white">
+                <div className="h-full flex md:hidden flex-col flex-1">
+                    <div className="fixed top-0 z-20 md:hidden pl-3 pt-3 bg-white">
                         <button
                             type="button"
                             className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"

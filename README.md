@@ -60,3 +60,7 @@ Day 1 :
 2.After clicking on the list icon for any of the pool it pops a modal with the history of that address in the pool:
 
 ![image](https://user-images.githubusercontent.com/72988597/173703257-c042790c-c9d4-4beb-89eb-2eebcce82048.png)
+
+
+### Status-6 (16-06-2022) ~ 3hrs work:
+ * Cleanup and UI changes

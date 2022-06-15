@@ -3,27 +3,51 @@ import { useEffect, useState } from "react"
 import {
     Tooltip,
     Loading,
+    Button,
     Icon,
     useNotification,
     Modal,
     Typography,
     Table,
-    Avatar,
+    Input,
     Tag,
 } from "web3uikit"
 
 export default function lppositionV2() {
+    //chainId is the id of the chain connected to and account is the address of the wallet connected to handeled internally by Moralis-SDK
     const { chainId, account } = useMoralis()
 
+    //To dispatch the notification on bottom right of the screen using web3uikit
+    const dispatch = useNotification()
+
+    //appId given by Zapper.fi API
     const appId = "uniswap-v2"
 
+    //React state variable - This is an array which stores the LP positions of the address
+    const [positions, setPositions] = useState([])
+
+    //React state variable - This is an array which stores the History of Txns in the V2-LP pool for which the address has positions in
+    const [tableData, setTableData] = useState([])
+
+    //React state varibale to toggle the Modal(Which shows the Txn logs in the V2-LP pool) visiblity
     const [modalVisible, setModalVisible] = useState(false)
 
+    //React state varibale to toggle the Modal(which asks user to enter an address to serach for) visiblity
+    const [addressModalVisible, setAddressModalVisible] = useState(false)
+
+    //React state variable - Input value user enters in the address modal
+    const [inputAddrValue, setInputAddrValue] = useState("")
+
+    //React state variable - The address which is searched for
+    const [showingAddress, setShowingAddress] = useState("")
+
+    //Name of chain for corresponding chainId. Supporting only ethereum and polygon
     const chainIdNameMap = {
         "0x1": "ethereum",
         "0x89": "polygon",
     }
 
+    //options used to fetch the V2-LP positions of the address
     const options = {
         user: account,
         // user: "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
@@ -31,8 +55,13 @@ export default function lppositionV2() {
         appId: appId,
     }
 
-    const dispatch = useNotification()
+    //Function takes care of storing the value entered by the user in the address modal automatically
+    const onInputChange = (event) => {
+        const { value } = event.target
+        setInputAddrValue(value)
+    }
 
+    //Function takes care dynamic data and dispactches the Notofication to the screen
     const handleNewNotification = (params) => {
         dispatch({
             type: params.type,
@@ -43,7 +72,33 @@ export default function lppositionV2() {
         })
     }
 
-    const fetchData = async () => {
+    //Function takes care of fetching the V2-LP positions of the address
+    const fetchData = async (addressGiven) => {
+        if (addressGiven === undefined || addressGiven === null || addressGiven === "") {
+            const params = {
+                type: "error",
+                message: "Please enter an address",
+                title: "Uniswap LP Position V2",
+                icon: "exclamation",
+            }
+            handleNewNotification(params)
+            // setPositions([{}])
+            return
+        }
+        addressGiven = addressGiven.toLowerCase().trim()
+        if (addressGiven.length !== 42) {
+            const params = {
+                type: "error",
+                message: "Please enter a valid address",
+                title: "Uniswap LP Position V2",
+                icon: "exclamation",
+            }
+            handleNewNotification(params)
+            // setPositions([{}])
+            return
+        }
+        options.user = addressGiven
+        setShowingAddress(options.user)
         try {
             if (
                 chainId === undefined ||
@@ -53,30 +108,37 @@ export default function lppositionV2() {
             ) {
                 const params = {
                     type: "error",
-                    message: "This network is not supported",
+                    message: "Supports only Ethereum",
                     title: "Uniswap LP Position V2",
                 }
                 handleNewNotification(params)
-                // alert(params.message)
                 setPositions([{}])
                 return
             }
-
+            setPositions([])
             const response = await fetch(
                 `/api/lpV2/${options.appId}/${options.user}/${chainIdNameMap[options.chainId]}`
             )
             const data = await response.json()
             console.log(data)
-            if (data.balances[options.user.toLowerCase()].error) {
+            if (data.error) {
+                const params = {
+                    type: "error",
+                    message: data.error.message[0],
+                    title: "Uniswap LP Position V2",
+                }
+                handleNewNotification(params)
+                return
+            } else if (data.balances[options.user.toLowerCase()].error) {
                 const params = {
                     type: "info",
                     message: data.balances[options.user.toLowerCase()].error.message,
                     title: "Uniswap LP Position V2",
                 }
                 handleNewNotification(params)
-                // alert(params.message)
                 setPositions([{}])
             } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
+                setPositions([{}])
                 const params = {
                     type: "warning",
                     message: `No LP positions found on ${
@@ -85,7 +147,6 @@ export default function lppositionV2() {
                     title: "Uniswap LP Position V2",
                 }
                 handleNewNotification(params)
-                // alert(params.message)
                 setPositions([{}])
             } else {
                 const params = {
@@ -103,11 +164,11 @@ export default function lppositionV2() {
                 title: "Unexpected error",
             }
             handleNewNotification(params)
-            // alert(params.message)
             setPositions([{}])
         }
     }
 
+    //Function to convert the unix timestamp to a human readable date
     const timeConverter = (UNIX_timestamp) => {
         var a = new Date(UNIX_timestamp * 1000)
         var months = [
@@ -134,53 +195,44 @@ export default function lppositionV2() {
         return time
     }
 
-    const unixTiem = 1600790245
-    const [tableData, setTableData] = useState([
-        // [
-        //     "0xeb514ade3c65dc5aeb9489e15604e0a4f92ff163a6de865b93db0f68faa9475f",
-        //     timeConverter(unixTiem),
-        //     "0x1d44f3bfc5b901c581886b940235cfb798ce4fc8",
-        //     "0x3933d871588063cc39f297b1a1e288067f4cc004",
-        //     "1388219288062472427",
-        // ],
-    ])
-
+    //Function to check if the txn is "to the address" given or "from the address" given
     const checkInOROut = (to) => {
-        return options.user.toLowerCase() === to.toLowerCase() ? "IN" : "OUT"
+        return showingAddress.toLowerCase() === to.toLowerCase() ? "IN" : "OUT"
     }
 
+    //If its a IN display green else display red in the tag
     const checkColor = (to) => {
-        return options.user.toLowerCase() === to.toLowerCase() ? "green" : "red"
+        return showingAddress.toLowerCase() === to.toLowerCase() ? "green" : "red"
     }
 
+    //generates the URL in the txn logs
     const getURL = (user, address, contract_address) => {
         return address.toLowerCase() != user.toLowerCase()
             ? `https://etherscan.io/address/${address}`
             : `https://etherscan.io/token/${contract_address}?a=${user}`
     }
 
+    //Function which fetches the Txn logs and triggers the Modal to display the logs as a table
     const showModal = async (contractAddr) => {
         try {
             setModalVisible(true)
             const resArr = []
-            const response = await fetch(`/api/v2logs/${contractAddr}/${options.user}`)
+            const response = await fetch(`/api/v2logs/${contractAddr}/${showingAddress}`)
             const data = await response.json()
             console.log(data)
             data.result.map((item) => {
                 resArr.push([
-                    <Tooltip content={item.hash} position="right">
-                        <a
-                            href={`https://etherscan.io/tx/${item.hash}`}
-                            className="text-blue-400"
-                            target="blank"
-                        >
-                            {item.hash.substring(0, 20) + "..."}
-                        </a>
-                    </Tooltip>,
+                    <a
+                        href={`https://etherscan.io/tx/${item.hash}`}
+                        className="text-blue-400"
+                        target="blank"
+                    >
+                        {item.hash.substring(0, 20) + "..."}
+                    </a>,
                     timeConverter(item.timeStamp),
                     <Tooltip content={item.from} position="top">
                         <a
-                            href={getURL(options.user, item.from, contractAddr)}
+                            href={getURL(showingAddress, item.from, contractAddr)}
                             className="text-blue-400"
                             target="blank"
                         >
@@ -192,7 +244,7 @@ export default function lppositionV2() {
                     </div>,
                     <Tooltip content={item.to} position="left">
                         <a
-                            href={getURL(options.user, item.to, contractAddr)}
+                            href={getURL(showingAddress, item.to, contractAddr)}
                             className="text-blue-400"
                             target="blank"
                         >
@@ -213,6 +265,7 @@ export default function lppositionV2() {
         }
     }
 
+    //Returns a list of txns in the LP pool as a table
     const getTable = () => {
         return (
             <Table
@@ -235,33 +288,56 @@ export default function lppositionV2() {
         )
     }
 
-    {
-        /* LP Positions will update with an API call*/
+    //The "?" Icon which shows the dtails of user and chain the data is showing for
+    const getToolTip = () => {
+        return (
+            <Tooltip
+                content={`Uniswap V2 Liquidity Position for the wallet ${showingAddress} on ${
+                    chainIdNameMap[options.chainId]
+                } blockchain`}
+                position="right"
+            >
+                <Icon fill="#68738D" size={25} svg="helpCircle" />
+            </Tooltip>
+        )
     }
-    const [poistions, setPositions] = useState([])
 
+    //React hook to fetch the V2-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
-        fetchData()
+        fetchData(account)
     }, [account, chainId])
 
     return (
         <div>
-            <div className="flex mt-10">
-                <Tooltip
-                    content={`Uniswap V2 Liquidity Position for the wallet ${options.user} on ${
-                        chainIdNameMap[options.chainId]
-                    } blockchain`}
-                    position="right"
-                >
-                    <Icon fill="#68738D" size={25} svg="helpCircle" />
-                </Tooltip>
+            <div className="flex justify-between mt-16">
+                {positions && positions.length !== 0 ? (
+                    <div className="mt-2">
+                        {/* the "?" ICON showed on the top left of the table which discribes the details */}
+                        {getToolTip()}
+                    </div>
+                ) : (
+                    <div></div>
+                )}
+                <div>
+                    {/* Button which enables usser to check different address than connect */}
+                    <Button
+                        id="checkOtherAddr"
+                        onClick={() => {
+                            setAddressModalVisible(true)
+                        }}
+                        text="Check different address"
+                        theme="secondary"
+                        type="button"
+                    />
+                </div>
             </div>
-            {poistions && poistions.length !== 0 ? (
+            {positions && positions.length !== 0 ? (
                 <div className="px-1 sm:px-1 lg:px-1">
-                    <div className="mt-8 flex flex-col">
+                    <div className="mt-2 flex flex-col">
                         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div className="flex justify-center items-center min-w-max py-2 md:px-6 lg:px-8">
                                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg border-2 border-r-4 border-t-4 rounded-lg">
+                                    {/* The table which displays the LP positions */}
                                     <table className="min-w-min divide-y divide-gray-300">
                                         <thead className="bg-gray-50">
                                             <tr>
@@ -322,8 +398,8 @@ export default function lppositionV2() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200 bg-white">
-                                            {poistions[0].assets &&
-                                                poistions[0].assets.map((position, index) => (
+                                            {positions[0].assets &&
+                                                positions[0].assets.map((position, index) => (
                                                     // +item.address,
                                                     <tr>
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -435,6 +511,7 @@ export default function lppositionV2() {
             ) : (
                 <div className="grid place-items-center h-screen w-full px-96 mr-60">
                     <div>
+                        {/* Loading animation to show while fetching data */}
                         <Loading
                             fontSize={20}
                             size={40}
@@ -445,8 +522,9 @@ export default function lppositionV2() {
                     </div>
                 </div>
             )}
+            {/* Modal to show txn logs in particular pool*/}
             <Modal
-                id="regular"
+                id="LogsModal"
                 isVisible={modalVisible}
                 onCloseButtonPressed={function noRefCheck() {
                     setModalVisible(false)
@@ -457,15 +535,17 @@ export default function lppositionV2() {
                     <div style={{ display: "flex", gap: 10 }}>
                         <Icon fill="#68738D" size={28} svg="list" />
                         <Typography color="#68738D" variant="h3">
-                            Your Txns History in this pool
+                            Your Txns History in the pool
                         </Typography>
                     </div>
                 }
             >
+                {/* Table which shows txn logs in particular pool*/}
                 {tableData && tableData.length > 1 ? (
                     <div className="pb-4">{getTable()}</div>
                 ) : (
                     <div className="flex justify-center py-8">
+                        {/* Shows Loading animation while fetching the Txn logs in the pool */}
                         <Loading
                             fontSize={20}
                             size={40}
@@ -476,6 +556,51 @@ export default function lppositionV2() {
                     </div>
                 )}
             </Modal>
+            <div>
+                {/* Modal to ask user to enter an address to search V2-LP position for*/}
+                <Modal
+                    id="addressModal"
+                    isVisible={addressModalVisible}
+                    hasCancel={false}
+                    okText="Check L2 Postions"
+                    onCloseButtonPressed={function noRefCheck() {
+                        setAddressModalVisible(false)
+                        if (
+                            positions &&
+                            positions.length >= 1 &&
+                            positions[0].assets &&
+                            positions[0].assets.length <= 1
+                        ) {
+                            setPositions([{}])
+                        }
+                    }}
+                    onOk={() => {
+                        setAddressModalVisible(false)
+                        fetchData(inputAddrValue)
+                    }}
+                    title={
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <Icon fill="#68738D" size={28} svg="edit" />
+                            <Typography color="#68738D" variant="h3">
+                                Enter any valid address to get LP V2 Positions
+                            </Typography>
+                        </div>
+                    }
+                >
+                    <div
+                        style={{
+                            padding: "20px 0 20px 0",
+                        }}
+                    >
+                        <Input
+                            label="address"
+                            width="100%"
+                            value={inputAddrValue}
+                            onChange={onInputChange}
+                        />
+                    </div>
+                </Modal>
+            </div>
         </div>
     )
 }

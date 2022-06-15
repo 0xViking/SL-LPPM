@@ -1,7 +1,7 @@
 async function getV2Positions(req, res) {
     const { slug } = req.query
 
-    const url = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${slug[0]}&address=${slug[1]}&page=1&offset=100&startblock=0&endblock=27025780&sort=desc&apikey=FHYEFV3J3E9MVXTZWY4IBZ26K823J1KPER`
+    const url = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${slug[0]}&address=${slug[1]}&page=1&offset=100&startblock=0&endblock=27025780&sort=desc&apikey=${process.env.ETHERSCAN_API_KEY}`
     try {
         const response = await fetch(url, {
             method: "GET",

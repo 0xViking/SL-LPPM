@@ -10,9 +10,7 @@ import {
     XIcon,
 } from "@heroicons/react/outline"
 
-{
-    /* Navigation Object */
-}
+// Sidebar menu items(Navigation Object)
 const navigation = [
     { name: "Home", href: "/", icon: HomeIcon, current: true },
     { name: "Uniswap LP V2", href: "/lppositionV2", icon: ChartBarIcon, current: false },
@@ -23,9 +21,7 @@ function classNames(...classes) {
     return classes.filter(Boolean).join(" ")
 }
 
-{
-    /* Function to change the current varibale in the Navigation object */
-}
+//Function to change the current varibale in the Navigation object
 function changeCurrent(navigation, current) {
     navigation.map((item) =>
         item.name === current ? (item.current = true) : (item.current = false)
@@ -33,9 +29,7 @@ function changeCurrent(navigation, current) {
 }
 
 export default function Sidebar() {
-    {
-        /* react state variable to know the sidebar status */
-    }
+    /* react state variable to know the sidebar status */
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     return (

@@ -5,7 +5,7 @@
    4. Once the installations are done, You have two options
    (a). run ```npm run dev```(in Dev mode the useEffect will run twice, so you might see screen/notifications rendering twice)
    (b). run ```npm run build``` and once build is generated run ```npm run start``` (This will generate an optimized production level build, which should work fine)
-   5. Once the server starts, you can open browser and open https://localhost:3000 or the address/port showed on the console
+   5. Once the server starts, you can open browser and open http://localhost:3000 or the address/port showed on the console
        
 
 # SL-LPPM

@@ -3,8 +3,8 @@
    2. In the root folder rename the ```.env.default``` file to ```.env``` and add the necessary API keys(Let me know if you need api keys, will send it privately)
    3. Open your terminal in the root folder and run ```npm install```
    4. Once the installations are done, You have two options
-       a. run ```yarn dev```(in Dev mode the useEffect will run twice, so you might see screen/notifications rendering twice)
-       b. run ```yarn build``` and once build is generated run ```yarn start``` (This will generate an optimized production level build, which should work fine)
+   (a). run ```yarn dev```(in Dev mode the useEffect will run twice, so you might see screen/notifications rendering twice)
+   (b). run ```yarn build``` and once build is generated run ```yarn start``` (This will generate an optimized production level build, which should work fine)
        
 
 # SL-LPPM

@@ -213,12 +213,12 @@ export default function lppositionV2() {
 
     //Function to check if the txn is "to the address" given or "from the address" given
     const checkInOROut = (to) => {
-        return showingAddress.toLowerCase() === to.toLowerCase() ? "IN" : "OUT"
+        return options.user.toLowerCase() === to.toLowerCase() ? "IN" : "OUT"
     }
 
     //If its a IN display green else display red in the tag
     const checkColor = (to) => {
-        return showingAddress.toLowerCase() === to.toLowerCase() ? "green" : "red"
+        return options.user.toLowerCase() === to.toLowerCase() ? "green" : "red"
     }
 
     //generates the URL in the txn logs
@@ -249,7 +249,7 @@ export default function lppositionV2() {
                     timeConverter(item.timeStamp),
                     <Tooltip content={item.from} position="top">
                         <a
-                            href={getURL(showingAddress, item.from, contractAddr)}
+                            href={getURL(options.user, item.from, contractAddr)}
                             className="text-blue-400"
                             target="blank"
                         >
@@ -261,7 +261,7 @@ export default function lppositionV2() {
                     </div>,
                     <Tooltip content={item.to} position="left">
                         <a
-                            href={getURL(showingAddress, item.to, contractAddr)}
+                            href={getURL(options.user, item.to, contractAddr)}
                             className="text-blue-400"
                             target="blank"
                         >
@@ -335,7 +335,7 @@ export default function lppositionV2() {
                         >
                             <Icon fill="#68738D" size={20} svg="list" />
                         </a>
-                        {element.displayProps.label}
+                        <div className="mt-0 text-blue-400">{element.displayProps.label}</div>
                     </div>,
                     <div className="flex justify-start">
                         {element.tokens[0].symbol}
@@ -409,9 +409,9 @@ export default function lppositionV2() {
                 header={[
                     <span>Liquidity Pool</span>,
                     <span>Token-1</span>,
-                    <span>Toekn-1 Balance</span>,
+                    <span>Token-1 Balance</span>,
                     <span>Token-2</span>,
-                    <span>Toekn-2 Balance</span>,
+                    <span>Token-2 Balance</span>,
                     <span>Total Liquidity in Pool($)</span>,
                     <span>Fee %</span>,
                     <span>Your share</span>,
@@ -427,7 +427,11 @@ export default function lppositionV2() {
 
     //React hook to fetch the V2-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
+        if (account === null || account === undefined) {
+            return
+        }
         fetchData(account)
+        setLoading(true)
     }, [account, chainId])
 
     return (

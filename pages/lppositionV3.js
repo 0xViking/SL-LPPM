@@ -104,6 +104,9 @@ export default function lppositionV3() {
                 icon: "exclamation",
             }
             handleNewNotification(params)
+            setNFTs([])
+            setDisplayNFTs([])
+            setLoading(false)
             return
         } else if (addressGiven.toLowerCase() === showingAddress.toLowerCase()) {
             const params = {
@@ -222,6 +225,9 @@ export default function lppositionV3() {
 
     //Reacat hook to fetch the V3-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
+        if (account === undefined || account === null) {
+            return
+        }
         fetchData(account)
         setLoading(true)
     }, [account, chainId])

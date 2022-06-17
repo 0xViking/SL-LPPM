@@ -188,9 +188,6 @@ export default function MainUI() {
                             />
                         </div>
                     </div>
-                    <div className="flex justify-end mt-1">
-                        <Image src="/zapper.svg" alt="zapper Logo" width={120} height={30} />
-                    </div>
                     <div className="ml-4 justify-center">
                         {/* <div className="flex">
                             <Tooltip

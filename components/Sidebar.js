@@ -130,23 +130,6 @@ export default function Sidebar() {
                                             ))}
                                         </nav>
                                     </div>
-                                    {/* Vercel logo in the Sidebar Mobile view */}
-                                    <a
-                                        className="flex justify-center px-10 py-2 fixed  bottom-0"
-                                        href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        Powered by{" "}
-                                        <span className="px-1 py-1">
-                                            <Image
-                                                src="/vercel.svg"
-                                                alt="Vercel Logo"
-                                                width={72}
-                                                height={16}
-                                            />
-                                        </span>
-                                    </a>
                                 </Dialog.Panel>
                             </Transition.Child>
                             <div className="flex-shrink-0 w-14">
@@ -197,23 +180,6 @@ export default function Sidebar() {
                                     ))}
                                 </nav>
                             </div>
-                            {/* Vercel logo in the Sidebar Desktop view */}
-                            <a
-                                className="flex justify-center px-6 py-2 fixed  bottom-0"
-                                href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Powered by{" "}
-                                <span className="px-1 py-1">
-                                    <Image
-                                        src="/vercel.svg"
-                                        alt="Vercel Logo"
-                                        width={72}
-                                        height={16}
-                                    />
-                                </span>
-                            </a>
                         </div>
                     </div>
                 </div>

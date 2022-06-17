@@ -80,3 +80,12 @@ Day 1 :
  * Updated Home page to show the V2 and V3 value at one glance using Zapper API
  * Added recent 100 txns history of the pool as well in the V2 page
  * Few other Minor UI changes and other fixes
+
+1. Home page updated.
+
+![image](https://user-images.githubusercontent.com/72988597/174218183-dd9c5427-36bb-4aa0-a4eb-80d037a714f5.png)
+
+
+2. Added recent 100 txns History in the V2 page
+![image](https://user-images.githubusercontent.com/72988597/174218426-ac3ebb71-83b6-42bd-b47b-26f03207ceb0.png)
+

@@ -76,7 +76,7 @@ export default function MainUI() {
                 const params = {
                     type: "error",
                     message: data.balances[userAddress.toLowerCase()].error.message,
-                    title: "Total Postions Value V2+V3",
+                    title: "Total Positions Value V2+V3",
                 }
                 handleNewNotification(params)
                 appID === "uniswap-v2" ? setV2Loading(false) : setV3Loading(false)
@@ -184,7 +184,7 @@ export default function MainUI() {
                                             .replace(/\.0+$/, "")
                                     )
                                 }
-                                title="Uniswap V3 Postions Value"
+                                title="Uniswap V3 Positions Value"
                             />
                         </div>
                     </div>

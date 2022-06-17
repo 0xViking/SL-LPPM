@@ -650,7 +650,7 @@ export default function lppositionV2() {
                     id="addressModal"
                     isVisible={addressModalVisible}
                     hasCancel={false}
-                    okText="Check V2 Postions"
+                    okText="Check V2 Position"
                     onCloseButtonPressed={function noRefCheck() {
                         setAddressModalVisible(false)
                         if (

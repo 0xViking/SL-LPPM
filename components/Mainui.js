@@ -215,7 +215,7 @@ export default function MainUI() {
                     id="addressModal"
                     isVisible={addressModalVisible}
                     hasCancel={false}
-                    okText="Check V2 Postions"
+                    okText="Check total value"
                     onCloseButtonPressed={function noRefCheck() {
                         setAddressModalVisible(false)
                     }}

@@ -16,7 +16,7 @@ import {
 const navigation = [
     { name: "Home", href: "/", icon: HomeIcon, current: true },
     { name: "Uniswap LP V2", href: "/lppositionV2", icon: ViewGridIcon, current: false },
-    { name: "Uniswap LP V3", href: "/lppositionV3", icon: RefreshIcon, current: false },
+    { name: "Uniswap LP V3", href: "/lppositionV3", icon: ViewGridIcon, current: false },
 ]
 
 function classNames(...classes) {

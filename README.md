@@ -74,3 +74,9 @@ Day 1 :
 
 ### Status-6 (16-06-2022) ~ 3hrs work:
  * Cleanup and UI changes
+
+
+### Status-7 (17-06-2022) ~ 4hrs work:
+ * Updated Home page to show the V2 and V3 value at one glance using Zapper API
+ * Added recent 100 txns history of the pool as well in the V2 page
+ * Few other Minor UI changes and other fixes

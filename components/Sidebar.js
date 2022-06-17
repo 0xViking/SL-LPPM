@@ -8,13 +8,15 @@ import {
     HomeIcon,
     MenuIcon,
     XIcon,
+    ViewGridIcon,
+    RefreshIcon,
 } from "@heroicons/react/outline"
 
 // Sidebar menu items(Navigation Object)
 const navigation = [
     { name: "Home", href: "/", icon: HomeIcon, current: true },
-    { name: "Uniswap LP V2", href: "/lppositionV2", icon: ChartBarIcon, current: false },
-    { name: "Uniswap LP V3", href: "/lppositionV3", icon: InformationCircleIcon, current: false },
+    { name: "Uniswap LP V2", href: "/lppositionV2", icon: ViewGridIcon, current: false },
+    { name: "Uniswap LP V3", href: "/lppositionV3", icon: RefreshIcon, current: false },
 ]
 
 function classNames(...classes) {

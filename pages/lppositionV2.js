@@ -11,6 +11,7 @@ import {
     Table,
     Input,
     Tag,
+    Accordion,
 } from "web3uikit"
 
 export default function lppositionV2() {
@@ -29,11 +30,17 @@ export default function lppositionV2() {
     //React state variable - This is an array of rows to be displayed in the table
     const [positionsTableData, setPositionsTableData] = useState([])
 
-    //React state variable - This is an array which stores the History of Txns in the V2-LP pool for which the address has positions in
+    //React state variable - This is an array which stores the History of User Txns in the V2-LP pool for which the address has positions in
     const [tableData, setTableData] = useState([])
+
+    //React state variable - This is an array which stores the History of Txns in the V2-LP pool
+    const [poolTableData, setpoolTableData] = useState([])
 
     //React state varibale to toggle the Modal(Which shows the Txn logs in the V2-LP pool) visiblity
     const [modalVisible, setModalVisible] = useState(false)
+
+    //React state varibale to toggle the Modal(Which shows the Pool logs for the selected) visiblity
+    const [modalPoolVisible, setModalPoolVisible] = useState(false)
 
     //React state varibale to toggle the Modal(which asks user to enter an address to serach for) visiblity
     const [addressModalVisible, setAddressModalVisible] = useState(false)
@@ -46,6 +53,10 @@ export default function lppositionV2() {
 
     //React state varibale - Shows whether its loading or not
     const [loading, setLoading] = useState(false)
+
+    const [poolTitle, setPoolTitle] = useState("")
+
+    const [poolTxnTitle, setPoolTxnTitle] = useState("")
 
     //Name of chain for corresponding chainId. Supporting only ethereum and polygon
     const chainIdNameMap = {
@@ -109,6 +120,10 @@ export default function lppositionV2() {
             handleNewNotification(params)
             return
         }
+        setModalPoolVisible(false)
+        setModalVisible(false)
+        setTableData([])
+        setpoolTableData([])
         options.user = addressGiven
         setShowingAddress(options.user)
         try {
@@ -125,9 +140,11 @@ export default function lppositionV2() {
                 }
                 handleNewNotification(params)
                 setPositions([])
+                setPositionsTableData([])
                 return
             }
             setPositions([])
+            setPositionsTableData([])
             setLoading(true)
             const response = await fetch(
                 `/api/lpV2/${options.appId}/${options.user}/${chainIdNameMap[options.chainId]}`
@@ -135,13 +152,9 @@ export default function lppositionV2() {
             const data = await response.json()
             console.log(data)
             setLoading(false)
-            if (data.error) {
-                const params = {
-                    type: "error",
-                    message: data.error.message[0],
-                    title: "Uniswap LP Position V2",
-                }
-                handleNewNotification(params)
+            if (data.error || (data.data && data.data === "error")) {
+                setPositions([])
+                setPositionsTableData([])
                 return
             } else if (data.balances[options.user.toLowerCase()].error) {
                 const params = {
@@ -151,8 +164,10 @@ export default function lppositionV2() {
                 }
                 handleNewNotification(params)
                 setPositions([])
+                setPositionsTableData([])
             } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
                 setPositions([])
+                setPositionsTableData([])
                 const params = {
                     type: "warning",
                     message: `No LP positions found on ${
@@ -162,6 +177,7 @@ export default function lppositionV2() {
                 }
                 handleNewNotification(params)
                 setPositions([])
+                setPositionsTableData([])
                 setLoading(false)
             } else {
                 const params = {
@@ -181,6 +197,7 @@ export default function lppositionV2() {
             }
             handleNewNotification(params)
             setPositions([])
+            setPositionsTableData([])
         }
     }
 
@@ -229,7 +246,59 @@ export default function lppositionV2() {
     }
 
     //Function which fetches the Txn logs and triggers the Modal to display the logs as a table
-    const showModal = async (contractAddr) => {
+    const showPoolModal = async (contractAddr, poolName) => {
+        try {
+            setpoolTableData([])
+            setModalPoolVisible(true)
+            const resArr = []
+            const response = await fetch(`/api/v2logs/${contractAddr}`)
+            const data = await response.json()
+            console.log(data)
+            data.result.map((item) => {
+                resArr.push([
+                    <a
+                        href={`https://etherscan.io/tx/${item.hash}`}
+                        className="text-blue-400"
+                        target="blank"
+                    >
+                        {item.transaction_hash.substring(0, 20) + "..."}
+                    </a>,
+                    item.block_timestamp.replace(/T/, " ").replace(/.000Z/, ""),
+                    <Tooltip content={item.from_address} position="top">
+                        <a
+                            href={`https://etherscan.io/address/${item.from_address}`}
+                            className="text-blue-400"
+                            target="blank"
+                        >
+                            {item.from_address.substring(0, 20) + "..."}
+                        </a>
+                    </Tooltip>,
+                    <Tooltip content={item.to_address} position="left">
+                        <a
+                            href={`https://etherscan.io/address/${item.to_address}`}
+                            className="text-blue-400"
+                            target="blank"
+                        >
+                            {item.to_address.substring(0, 20) + "..."}
+                        </a>
+                    </Tooltip>,
+                    (item.value / 1000000000000000000)
+                        .toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                        })
+                        .replace(/\.0+$/, ""),
+                ])
+            })
+            setpoolTableData(resArr)
+            setPoolTxnTitle(poolName)
+            console.log(poolTableData)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    //Function which fetches the Txn logs and triggers the Modal to display the logs as a table
+    const showModal = async (contractAddr, poolName) => {
         try {
             setTableData([])
             setModalVisible(true)
@@ -276,6 +345,7 @@ export default function lppositionV2() {
                 ])
             })
             setTableData(resArr)
+            setPoolTitle(poolName)
             console.log(tableData)
         } catch (error) {
             console.log(error)
@@ -283,20 +353,36 @@ export default function lppositionV2() {
     }
 
     //Returns a list of txns in the LP pool as a table
-    const getTable = () => {
+    const getTable = (type) => {
         return (
             <Table
-                columnsConfig="3fr 3fr 3fr 80px 3fr 80px"
-                data={tableData}
-                header={[
-                    <span>Txn Hash</span>,
-                    <span>Date</span>,
-                    <span>From</span>,
-                    "",
-                    <span>To</span>,
-                    <span>Quantity</span>,
-                ]}
-                isColumnSortable={[false, false, false, false, false, false]}
+                columnsConfig={
+                    type === "poolTable" ? "3fr 3fr 3fr 3fr 1fr" : "3fr 3fr 3fr 80px 3fr 1fr"
+                }
+                data={type === "poolTable" ? poolTableData : tableData}
+                header={
+                    type === "poolTable"
+                        ? [
+                              <span>Txn Hash</span>,
+                              <span>Date</span>,
+                              <span>From</span>,
+                              <span>To</span>,
+                              <span>Value in ETH</span>,
+                          ]
+                        : [
+                              <span>Txn Hash</span>,
+                              <span>Date</span>,
+                              <span>From</span>,
+                              "",
+                              <span>To</span>,
+                              <span>Quantity</span>,
+                          ]
+                }
+                isColumnSortable={
+                    type === "poolTable"
+                        ? [false, false, false, false, false, false]
+                        : [false, false, false, false, false, false]
+                }
                 maxPages={1}
                 noPagination
                 onPageNumberChanged={function noRefCheck() {}}
@@ -324,25 +410,25 @@ export default function lppositionV2() {
         let responseArr = []
         givenPostions &&
             givenPostions.length > 0 &&
-            givenPostions[0].assets.forEach((element) => {
+            givenPostions[0].assets.forEach((element, index) => {
                 responseArr.push([
-                    <div className="flex justify-start">
+                    <div>{index + 1}</div>,
+                    <div className="mt-0 text-blue-400">
                         <a
                             className="mr-2 cursor-pointer cursor-hand"
                             onClick={() => {
-                                showModal(element.address)
+                                showPoolModal(element.address, element.displayProps.label)
                             }}
                         >
-                            <Icon fill="#68738D" size={20} svg="list" />
+                            {element.displayProps.label}
                         </a>
-                        <div className="mt-0 text-blue-400">{element.displayProps.label}</div>
                     </div>,
                     <div className="flex justify-start">
                         {element.tokens[0].symbol}
                         <img
                             src={element.displayProps.images[0]}
-                            width={20}
-                            height={20}
+                            width={25}
+                            height={25}
                             className="ml-1"
                         />
                     </div>,
@@ -360,8 +446,8 @@ export default function lppositionV2() {
                         {element.tokens[1].symbol}
                         <img
                             src={element.displayProps.images[1]}
-                            width={20}
-                            height={20}
+                            width={25}
+                            height={25}
                             className="ml-1"
                         />
                     </div>,
@@ -384,15 +470,22 @@ export default function lppositionV2() {
                         {element.displayProps.statsItems[2].value.value.toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                         })}
-                        {"%"}
                     </div>,
-                    <div>
+                    <div className="flex justify-start">
                         {element.displayProps.statsItems[3].value.value.toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                         })}
                         {"%($"}
                         {element.balanceUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         {")"}
+                        <a
+                            className="mr-2 cursor-pointer cursor-hand"
+                            onClick={() => {
+                                showModal(element.address, element.displayProps.label)
+                            }}
+                        >
+                            <Icon fill="#68738D" size={20} svg="list" />
+                        </a>
                     </div>,
                 ])
             })
@@ -404,9 +497,10 @@ export default function lppositionV2() {
     const getPositionsTable = () => {
         return (
             <Table
-                columnsConfig="2fr 1fr 2fr 1fr 2fr 2fr 1fr 1fr"
+                columnsConfig="40px 1.5fr 1fr 2fr 1fr 2fr 1.5fr 1fr 1fr"
                 data={positionsTableData}
                 header={[
+                    <span>#</span>,
                     <span>Liquidity Pool</span>,
                     <span>Token-1</span>,
                     <span>Token-1 Balance</span>,
@@ -416,7 +510,7 @@ export default function lppositionV2() {
                     <span>Fee %</span>,
                     <span>Your share</span>,
                 ]}
-                isColumnSortable={[false, false, false, false, false, false, false]}
+                isColumnSortable={[false, false, false, false, false, false, false, false]}
                 maxPages={1}
                 noPagination
                 onPageNumberChanged={function noRefCheck() {}}
@@ -474,41 +568,81 @@ export default function lppositionV2() {
                     </div>
                 </div>
             )}
-            <div className={`w-full h-full fixed z-30 ${modalVisible ? "" : "hidden"}`}>
-                {/* Modal to show txn logs in particular pool*/}
-                <Modal
-                    id="LogsModal"
-                    isVisible={modalVisible}
-                    onCloseButtonPressed={function noRefCheck() {
-                        setModalVisible(false)
-                    }}
-                    onOk={function noRefCheck() {}}
-                    hasFooter={false}
-                    title={
-                        <div style={{ display: "flex", gap: 10 }}>
-                            <Icon fill="#68738D" size={28} svg="list" />
-                            <Typography color="#68738D" variant="h3">
-                                Your Txns History in the pool
-                            </Typography>
-                        </div>
-                    }
-                >
-                    {/* Table which shows txn logs in particular pool*/}
-                    {tableData && tableData.length > 1 ? (
-                        <div className="pb-4">{getTable()}</div>
+            <div>
+                {!modalPoolVisible || (poolTableData && poolTableData.length > 1) ? (
+                    poolTableData && poolTableData.length === 0 ? (
+                        <div></div>
                     ) : (
-                        <div className="flex justify-center py-8">
-                            {/* Shows Loading animation while fetching the Txn logs in the pool */}
-                            <Loading
-                                fontSize={20}
-                                size={40}
-                                spinnerColor="#2E7DAF"
-                                spinnerType="loader"
-                                text="Loading..."
-                            />
+                        <div className="pb-4">
+                            {/* <Widget
+                                info={
+                                    <div className="flex justify-center font-bold text-2xl text-blue-400">
+                                        Transaction logs for the pool
+                                    </div>
+                                }
+                            /> */}
+                            <Accordion
+                                id="accordion"
+                                isExpanded={true}
+                                subTitle=""
+                                tagText=""
+                                theme="blue"
+                                title={`Latest 100 Transactions in the pool ${poolTxnTitle}`}
+                            >
+                                {getTable("poolTable")}
+                            </Accordion>
                         </div>
-                    )}
-                </Modal>
+                    )
+                ) : (
+                    <div className="flex justify-center py-8">
+                        {/* Shows Loading animation while fetching the Txn logs in the pool */}
+                        <Loading
+                            fontSize={20}
+                            size={40}
+                            spinnerColor="#2E7DAF"
+                            spinnerType="loader"
+                            text="Loading..."
+                        />
+                    </div>
+                )}
+            </div>
+            <div>
+                {!modalVisible || (tableData && tableData.length > 1) ? (
+                    tableData && tableData.length === 0 ? (
+                        <div></div>
+                    ) : (
+                        <div className="pb-4">
+                            {/* <Widget
+                                info={
+                                    <div className="flex justify-center font-bold text-2xl text-blue-400">
+                                        Transaction logs for the pool
+                                    </div>
+                                }
+                            /> */}
+                            <Accordion
+                                id="accordion"
+                                isExpanded={true}
+                                subTitle=""
+                                tagText=""
+                                theme="blue"
+                                title={`Your recent txns in the pool ${poolTitle}`}
+                            >
+                                {getTable("table")}
+                            </Accordion>
+                        </div>
+                    )
+                ) : (
+                    <div className="flex justify-center py-8">
+                        {/* Shows Loading animation while fetching the Txn logs in the pool */}
+                        <Loading
+                            fontSize={20}
+                            size={40}
+                            spinnerColor="#2E7DAF"
+                            spinnerType="loader"
+                            text="Loading..."
+                        />
+                    </div>
+                )}
             </div>
             <div className={`w-full h-full fixed z-30 ${addressModalVisible ? "" : "hidden"}`}>
                 {/* Modal to ask user to enter an address to search V2-LP position for*/}
@@ -526,6 +660,7 @@ export default function lppositionV2() {
                             positions[0].assets.length <= 1
                         ) {
                             setPositions([])
+                            setPositionsTableData([])
                         }
                     }}
                     onOk={() => {

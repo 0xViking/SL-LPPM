@@ -6,7 +6,7 @@ async function getV2Positions(req, res) {
     const url =
         slug.length > 1
             ? `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${slug[0]}&address=${slug[1]}&page=1&offset=100&startblock=0&endblock=27025780&sort=desc&apikey=${process.env.ETHERSCAN_API_KEY}`
-            : `https://deep-index.moralis.io/api/v2/${slug[0]}/erc20/transfers?chain=eth`
+            : `https://deep-index.moralis.io/api/v2/${slug[0]}/erc20/transfers?chain=eth&limit=100`
 
     try {
         const response =

@@ -259,7 +259,7 @@ export default function lppositionV2() {
             data.result.map((item) => {
                 resArr.push([
                     <a
-                        href={`https://etherscan.io/tx/${item.hash}`}
+                        href={`https://etherscan.io/tx/${item.transaction_hash}`}
                         className="text-blue-400"
                         target="blank"
                     >
@@ -369,7 +369,7 @@ export default function lppositionV2() {
                               <span>Date</span>,
                               <span>From</span>,
                               <span>To</span>,
-                              <span>Value in ETH</span>,
+                              <span>Quantity</span>,
                           ]
                         : [
                               <span>Txn Hash</span>,
@@ -600,7 +600,7 @@ export default function lppositionV2() {
                 </div>
             )}
             <div>
-                {!modalPoolVisible || (poolTableData && poolTableData.length > 1) ? (
+                {!modalPoolVisible || (poolTableData && poolTableData.length !== 0) ? (
                     poolTableData && poolTableData.length === 0 ? (
                         <div></div>
                     ) : (
@@ -638,7 +638,7 @@ export default function lppositionV2() {
                 )}
             </div>
             <div>
-                {!modalVisible || (tableData && tableData.length > 1) ? (
+                {!modalVisible || (tableData && tableData.length !== 0) ? (
                     tableData && tableData.length === 0 ? (
                         <div></div>
                     ) : (

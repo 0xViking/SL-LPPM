@@ -106,7 +106,6 @@ export default function lppositionV3() {
             }
             handleNewNotification(params)
             setNFTs([])
-            setDisplayNFTs([])
             setLoading(false)
             return
         } else if (addressGiven.toLowerCase() === showingAddress.toLowerCase()) {
@@ -146,10 +145,12 @@ export default function lppositionV3() {
                 }
                 handleNewNotification(params)
                 setNFTs([])
+                setDisplayNFTs([])
                 setLoading(false)
                 return
             }
             setNFTs([])
+            setDisplayNFTs([])
             setLoading(true)
             const response = await fetch(
                 `/api/lpV3/${options.user}/${options.token_address}/${options.chainId}`
@@ -164,6 +165,7 @@ export default function lppositionV3() {
                 }
                 handleNewNotification(params)
                 setNFTs([])
+                setDisplayNFTs([])
                 setLoading(false)
             } else if (data && data.result && data.result.length <= 0) {
                 const params = {
@@ -176,6 +178,7 @@ export default function lppositionV3() {
                 }
                 handleNewNotification(params)
                 setNFTs([])
+                setDisplayNFTs([])
                 setLoading(false)
             } else {
                 console.log(data.result)
@@ -199,6 +202,7 @@ export default function lppositionV3() {
             }
             handleNewNotification(params)
             setNFTs([])
+            setDisplayNFTs([])
             setLoading(false)
         }
     }

@@ -1,5 +1,6 @@
 import { useMoralis } from "react-moralis"
 import { useEffect, useState } from "react"
+import { globalUserAddress } from "./userAddress"
 import {
     NFT,
     Loading,
@@ -114,7 +115,7 @@ export default function lppositionV3() {
                 message: "Showing For the same address",
                 title: "Uniswap LP Position V3",
             }
-            handleNewNotification(params)
+            // handleNewNotification(params)
             return
         }
         addressGiven = addressGiven.toLowerCase().trim()
@@ -130,6 +131,7 @@ export default function lppositionV3() {
         }
         options.user = addressGiven
         setShowingAddress(options.user)
+        globalUserAddress = options.user
         try {
             if (
                 chainId === undefined ||
@@ -184,7 +186,7 @@ export default function lppositionV3() {
                     title: "Uniswap LP Position V3",
                 }
                 if (data.result.length > 0 && NFTs.length < 1) {
-                    handleNewNotification(params)
+                    // handleNewNotification(params)
                 }
                 setNFTs(data.result)
                 setLoading(false)
@@ -225,105 +227,136 @@ export default function lppositionV3() {
 
     //Reacat hook to fetch the V3-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
-        if (account === undefined || account === null) {
-            return
+        if (
+            globalUserAddress === undefined ||
+            globalUserAddress === null ||
+            globalUserAddress === ""
+        ) {
+            if (account === undefined || account === null) {
+                return
+            }
+            fetchData(account)
+            setLoading(true)
+        } else {
+            fetchData(globalUserAddress)
+            setLoading(true)
         }
-        fetchData(account)
-        setLoading(true)
     }, [account, chainId])
 
     return (
         <div>
-            <div className="flex justify-between">
-                {NFTs && NFTs.length !== 0 ? (
-                    <div className="mt-2">
-                        {/* the "?" ICON showed on the top left of the NFTs which discribes the details */}
-                        {getToolTip()}
+            {account !== null && chainId !== null ? (
+                <div>
+                    <div className="flex justify-between">
+                        <div className="mt-2">
+                            {/* the "?" ICON showed on the top left of the NFTs which discribes the details */}
+                            {getToolTip()}
+                        </div>
+                        <div>
+                            {/* Button which enables usser to check different address than connect */}
+                            {globalUserAddress !== "" && globalUserAddress !== account ? (
+                                <Button
+                                    id="checkOwnAddr"
+                                    onClick={() => {
+                                        globalUserAddress = ""
+                                        fetchData(account)
+                                        setLoading(true)
+                                    }}
+                                    text="Check for connected wallet"
+                                    theme="secondary"
+                                    type="button"
+                                />
+                            ) : null}
+                        </div>
+                        <div>
+                            {/* Button which enables usser to check different address than connect */}
+                            <Button
+                                id="checkOtherAddr"
+                                onClick={() => {
+                                    setAddressModalVisible(true)
+                                }}
+                                text="Check different address"
+                                theme="secondary"
+                                type="button"
+                            />
+                        </div>
                     </div>
-                ) : (
-                    <div></div>
-                )}
-                <div>
-                    {/* Button which enables usser to check different address than connect */}
-                    <Button
-                        id="checkOtherAddr"
-                        onClick={() => {
-                            setAddressModalVisible(true)
-                        }}
-                        text="Check different address"
-                        theme="secondary"
-                        type="button"
-                    />
-                </div>
-            </div>
-            {!loading || (displayNFTs && displayNFTs.length !== 0) ? (
-                <div>
-                    <div className="pt-4">
-                        <ul
-                            role="list"
-                            className="grid grid-cols-1 gap-x-8 gap-y-8 sm:gap-x-10 md:grid-cols-2 md:gap-x-8 xl:grid-cols-4 xl:gap-x-8"
-                        >
-                            {/* This is the NFTs Displaying for Uniswap Liquidity V3 Positions */}
-                            {displayNFTs &&
-                                displayNFTs.length > 0 &&
-                                displayNFTs.map((nft) => (
-                                    <li
-                                        key={nft.token_hash}
-                                        className="p-2 relative border-2 border-r-4 border-t-4 rounded-lg shadow-lg"
-                                    >
-                                        <a
-                                            href={`https://opensea.io/assets/ethereum/${chainIdAddrMap[chainId]}/${nft.token_id}`}
-                                            target="_blank"
-                                        >
-                                            <NFT
-                                                address="0xc36442b4a4522e871399cd717abdd847ab11fe88"
-                                                chain={chainId}
-                                                metadata={nft.metadata && JSON.parse(nft.metadata)}
-                                                tokenId={nft.token_id}
+                    {!loading || (displayNFTs && displayNFTs.length !== 0) ? (
+                        <div>
+                            <div className="pt-4">
+                                <ul
+                                    role="list"
+                                    className="grid grid-cols-1 gap-x-8 gap-y-8 sm:gap-x-10 md:grid-cols-2 md:gap-x-8 xl:grid-cols-4 xl:gap-x-8"
+                                >
+                                    {/* This is the NFTs Displaying for Uniswap Liquidity V3 Positions */}
+                                    {displayNFTs &&
+                                        displayNFTs.length > 0 &&
+                                        displayNFTs.map((nft) => (
+                                            <li
+                                                key={nft.token_hash}
+                                                className="p-2 relative border-2 border-r-4 border-t-4 rounded-lg shadow-lg"
+                                            >
+                                                <a
+                                                    href={`https://opensea.io/assets/ethereum/${chainIdAddrMap[chainId]}/${nft.token_id}`}
+                                                    target="_blank"
+                                                >
+                                                    <NFT
+                                                        address="0xc36442b4a4522e871399cd717abdd847ab11fe88"
+                                                        chain={chainId}
+                                                        metadata={
+                                                            nft.metadata && JSON.parse(nft.metadata)
+                                                        }
+                                                        tokenId={nft.token_id}
+                                                    />
+                                                </a>
+                                            </li>
+                                        ))}
+                                </ul>
+                                {NFTs &&
+                                    NFTs.length > 0 &&
+                                    displayNFTs &&
+                                    displayNFTs.length > 0 &&
+                                    NFTs.length !== displayNFTs.length && (
+                                        //Show more button to show more NFTs if the user has more NFTs than the displayNFTs
+                                        <div className="flex justify-center pt-4 w-full">
+                                            <Button
+                                                id="showMoreNFTs"
+                                                onClick={() => {
+                                                    handleShowMoreAction()
+                                                }}
+                                                text="Show more"
+                                                theme="secondary"
+                                                type="button"
                                             />
-                                        </a>
-                                    </li>
-                                ))}
-                        </ul>
-                        {NFTs &&
-                            NFTs.length > 0 &&
-                            displayNFTs &&
-                            displayNFTs.length > 0 &&
-                            NFTs.length !== displayNFTs.length && (
-                                //Show more button to show more NFTs if the user has more NFTs than the displayNFTs
-                                <div className="flex justify-center pt-4 w-full">
-                                    <Button
-                                        id="showMoreNFTs"
-                                        onClick={() => {
-                                            handleShowMoreAction()
-                                        }}
-                                        text="Show more"
-                                        theme="secondary"
-                                        type="button"
-                                    />
-                                </div>
-                            )}
-                        {displayNFTs.length == 0 && (
-                            //Shows this message if the user has no NFTs
-                            <div className="flex justify-center font-bold text-2xl text-blue-400">
-                                {" "}
-                                No Postions Found
+                                        </div>
+                                    )}
+                                {displayNFTs.length == 0 && (
+                                    //Shows this message if the user has no NFTs
+                                    <div className="flex justify-center font-bold text-2xl text-blue-400">
+                                        {" "}
+                                        No Postions Found
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="grid place-items-center h-screen w-full px-96 mr-60">
+                            <div>
+                                {/* Shows Loading animation while fetching the V3-Postions NFTs */}
+                                <Loading
+                                    fontSize={20}
+                                    size={40}
+                                    spinnerColor="#2E7DAF"
+                                    spinnerType="loader"
+                                    text="Loading..."
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
-                <div className="grid place-items-center h-screen w-full px-96 mr-60">
-                    <div>
-                        {/* Shows Loading animation while fetching the V3-Postions NFTs */}
-                        <Loading
-                            fontSize={20}
-                            size={40}
-                            spinnerColor="#2E7DAF"
-                            spinnerType="loader"
-                            text="Loading..."
-                        />
-                    </div>
+                <div className="flex justify-center font-bold text-2xl text-blue-400">
+                    Connect to the Wallet using "Connect Wallet" button above
                 </div>
             )}
             <div className={`w-full h-full fixed z-30 ${addressModalVisible ? "" : "hidden"}`}>

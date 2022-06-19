@@ -1,5 +1,6 @@
 import { useMoralis } from "react-moralis"
 import { useEffect, useState } from "react"
+import { globalUserAddress } from "./userAddress"
 import {
     Tooltip,
     Loading,
@@ -106,7 +107,7 @@ export default function lppositionV2() {
                 message: "Showing For the same address",
                 title: "Uniswap LP Position V2",
             }
-            handleNewNotification(params)
+            // handleNewNotification(params)
             return
         }
         addressGiven = addressGiven.toLowerCase().trim()
@@ -126,6 +127,7 @@ export default function lppositionV2() {
         setpoolTableData([])
         options.user = addressGiven
         setShowingAddress(options.user)
+        globalUserAddress = options.user
         try {
             if (
                 chainId === undefined ||
@@ -185,7 +187,7 @@ export default function lppositionV2() {
                     message: "LP positions found",
                     title: "Uniswap LP Position V2",
                 }
-                handleNewNotification(params)
+                // handleNewNotification(params)
                 setPositions(data.balances[options.user.toLowerCase()].products)
                 setPositionsData(data.balances[options.user.toLowerCase()].products)
             }
@@ -521,51 +523,80 @@ export default function lppositionV2() {
 
     //React hook to fetch the V2-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
-        if (account === null || account === undefined) {
-            return
+        if (
+            globalUserAddress === undefined ||
+            globalUserAddress === null ||
+            globalUserAddress === ""
+        ) {
+            if (account === null || account === undefined) {
+                return
+            }
+            fetchData(account)
+            setLoading(true)
+        } else {
+            fetchData(globalUserAddress)
+            setLoading(true)
         }
-        fetchData(account)
-        setLoading(true)
     }, [account, chainId])
 
     return (
         <div>
-            <div className="flex justify-between">
-                {positions && positions.length !== 0 ? (
-                    <div>
-                        {/* the "?" ICON showed on the top left of the table which discribes the details */}
-                        {getToolTip()}
-                    </div>
-                ) : (
-                    <div></div>
-                )}
+            {account !== null && chainId !== null ? (
                 <div>
-                    {/* Button which enables usser to check different address than connect */}
-                    <Button
-                        id="checkOtherAddr"
-                        onClick={() => {
-                            setAddressModalVisible(true)
-                        }}
-                        text="Check different address"
-                        theme="secondary"
-                        type="button"
-                    />
-                </div>
-            </div>
-            {!loading || (positionsTableData && positionsTableData.length !== 0) ? (
-                <div className="py-4">{getPositionsTable()}</div>
-            ) : (
-                <div className="grid place-items-center h-screen w-full px-96 mr-60">
-                    <div>
-                        {/* Loading animation to show while fetching data */}
-                        <Loading
-                            fontSize={20}
-                            size={40}
-                            spinnerColor="#2E7DAF"
-                            spinnerType="loader"
-                            text="Loading..."
-                        />
+                    <div className="flex justify-between">
+                        <div>
+                            {/* the "?" ICON showed on the top left of the table which discribes the details */}
+                            {getToolTip()}
+                        </div>
+                        <div>
+                            {/* Button which enables usser to check different address than connect */}
+                            {globalUserAddress !== "" && globalUserAddress !== account ? (
+                                <Button
+                                    id="checkOwnAddr"
+                                    onClick={() => {
+                                        globalUserAddress = ""
+                                        fetchData(account)
+                                        setLoading(true)
+                                    }}
+                                    text="Check for connected wallet"
+                                    theme="secondary"
+                                    type="button"
+                                />
+                            ) : null}
+                        </div>
+                        <div>
+                            {/* Button which enables usser to check different address than connect */}
+                            <Button
+                                id="checkOtherAddr"
+                                onClick={() => {
+                                    setAddressModalVisible(true)
+                                }}
+                                text="Check different address"
+                                theme="secondary"
+                                type="button"
+                            />
+                        </div>
                     </div>
+                    {!loading || (positionsTableData && positionsTableData.length !== 0) ? (
+                        <div className="py-4">{getPositionsTable()}</div>
+                    ) : (
+                        <div className="grid place-items-center h-screen w-full px-96 mr-60">
+                            <div>
+                                {/* Loading animation to show while fetching data */}
+                                <Loading
+                                    fontSize={20}
+                                    size={40}
+                                    spinnerColor="#2E7DAF"
+                                    spinnerType="loader"
+                                    text="Loading..."
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="flex justify-center font-bold text-2xl text-blue-400">
+                    Connect to the Wallet using "Connect Wallet" button above
                 </div>
             )}
             <div>

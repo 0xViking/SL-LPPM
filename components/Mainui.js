@@ -1,5 +1,5 @@
 import { useMoralis } from "react-moralis"
-import Image from "next/image"
+import { globalUserAddress } from "../pages/userAddress"
 import { useEffect, useState } from "react"
 import { Button, Widget, Loading, useNotification, Modal, Icon, Typography, Input } from "web3uikit"
 
@@ -55,6 +55,32 @@ export default function MainUI() {
 
     //Function to get the V2 & V3 positions value to show the worth
     const getValue = async (userAddress, appID) => {
+        if (userAddress === undefined || userAddress === null || userAddress === "") {
+            const params = {
+                type: "error",
+                message: "Please enter an address",
+                title: "Wallet Value",
+            }
+            handleNewNotification(params)
+            return
+        } else if (userAddress.toLowerCase() === showingAddress.toLowerCase()) {
+            const params = {
+                type: "warning",
+                message: "Showing For the same address",
+                title: "Wallet Value",
+            }
+            // handleNewNotification(params)
+            return
+        }
+        if (userAddress.length !== 42) {
+            const params = {
+                type: "error",
+                message: "Please enter a valid address",
+                title: "Wallet Value",
+            }
+            handleNewNotification(params)
+            return
+        }
         try {
             if (
                 chainId === undefined ||
@@ -99,97 +125,125 @@ export default function MainUI() {
 
     const getAccountValue = async (accountAddr) => {
         setShowingAddress(accountAddr)
+        globalUserAddress = accountAddr
+        console.log("userAddress stored", globalUserAddress)
         getValue(accountAddr, "uniswap-v2")
         getValue(accountAddr, "uniswap-v3")
     }
 
     //React hook to get the V2 & V3 positions value
     useEffect(() => {
-        if (account === undefined || account === null || account === "") {
-            return
-        }
-        getAccountValue(account)
+        if (
+            globalUserAddress === undefined ||
+            globalUserAddress === null ||
+            globalUserAddress === ""
+        ) {
+            if (account === undefined || account === null || account === "") {
+                return
+            }
+            getAccountValue(account)
+        } else getAccountValue(globalUserAddress)
     }, [account])
 
     return (
         <div>
-            <div className="flex justify-end">
-                {/* Button which enables usser to check different address than connect */}
-                <Button
-                    id="checkOtherAddr"
-                    onClick={() => {
-                        setAddressModalVisible(true)
-                    }}
-                    text="Check different address"
-                    theme="secondary"
-                    type="button"
-                />
-            </div>
             {account !== null && chainId !== null ? (
                 <div>
-                    <div className="grid gap-5 pt-5">
-                        <div className="flex gap-5">
-                            <Widget info={showingAddress} title="Wallet Address" />
+                    <div className="flex justify-between">
+                        <div></div>
+                        <div>
+                            {/* Button which enables usser to check different address than connect */}
+                            {globalUserAddress !== "" && globalUserAddress !== account ? (
+                                <Button
+                                    id="checkOwnAddr"
+                                    onClick={() => {
+                                        globalUserAddress = ""
+                                        getAccountValue(account)
+                                    }}
+                                    text="Check for connected wallet"
+                                    theme="secondary"
+                                    type="button"
+                                />
+                            ) : null}
                         </div>
-                        <div className="flex gap-5">
-                            <Widget
-                                key="v2Bal"
-                                info={
-                                    v2loading ? (
-                                        <div className="grid pt-3">
-                                            <div>
-                                                {/* Loading animation to show while fetching data */}
-                                                <Loading
-                                                    fontSize={20}
-                                                    size={30}
-                                                    spinnerColor="#2E7DAF"
-                                                    spinnerType="loader"
-                                                    text="Loading..."
-                                                />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        "$ " +
-                                        v2Balance
-                                            .toLocaleString("en-US", {
-                                                minimumFractionDigits: 3,
-                                            })
-                                            .replace(/\.0+$/, "")
-                                    )
-                                }
-                                title="Uniswap V2 Positions Value"
-                            />
-                            <Widget
-                                key="v3Bal"
-                                info={
-                                    v3loading ? (
-                                        <div className="grid pt-3">
-                                            <div>
-                                                {/* Loading animation to show while fetching data */}
-                                                <Loading
-                                                    fontSize={20}
-                                                    size={30}
-                                                    spinnerColor="#2E7DAF"
-                                                    spinnerType="loader"
-                                                    text="Loading..."
-                                                />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        "$ " +
-                                        v3Balance
-                                            .toLocaleString("en-US", {
-                                                minimumFractionDigits: 3,
-                                            })
-                                            .replace(/\.0+$/, "")
-                                    )
-                                }
-                                title="Uniswap V3 Positions Value"
+                        <div>
+                            {/* Button which enables usser to check different address than connect */}
+                            <Button
+                                id="checkOtherAddr"
+                                onClick={() => {
+                                    setAddressModalVisible(true)
+                                }}
+                                text="Check different address"
+                                theme="secondary"
+                                type="button"
                             />
                         </div>
                     </div>
-                    <div className="ml-4 justify-center">
-                        {/* <div className="flex">
+
+                    <div>
+                        <div className="grid gap-5 pt-5">
+                            <div className="flex gap-5">
+                                <Widget info={showingAddress} title="Wallet Address" />
+                            </div>
+                            <div className="flex gap-5">
+                                <Widget
+                                    key="v2Bal"
+                                    info={
+                                        v2loading ? (
+                                            <div className="grid pt-3">
+                                                <div>
+                                                    {/* Loading animation to show while fetching data */}
+                                                    <Loading
+                                                        fontSize={20}
+                                                        size={30}
+                                                        spinnerColor="#2E7DAF"
+                                                        spinnerType="loader"
+                                                        text="Loading..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            "$ " +
+                                            v2Balance
+                                                .toLocaleString("en-US", {
+                                                    minimumFractionDigits: 3,
+                                                })
+                                                .replace(/\.0+$/, "")
+                                        )
+                                    }
+                                    title="Uniswap V2 Positions Value"
+                                />
+                                <Widget
+                                    key="v3Bal"
+                                    info={
+                                        v3loading ? (
+                                            <div className="grid pt-3">
+                                                <div>
+                                                    {/* Loading animation to show while fetching data */}
+                                                    <Loading
+                                                        fontSize={20}
+                                                        size={30}
+                                                        spinnerColor="#2E7DAF"
+                                                        spinnerType="loader"
+                                                        text="Loading..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            "$ " +
+                                            v3Balance
+                                                .toLocaleString("en-US", {
+                                                    minimumFractionDigits: 3,
+                                                })
+                                                .replace(/\.0+$/, "")
+                                        )
+                                    }
+                                    title="Uniswap V3 Positions Value"
+                                />
+                            </div>
+                        </div>
+                        <div className="ml-4 justify-center">
+                            {/* <div className="flex">
                             <Tooltip
                                 content={`All NFTs in the wallet ${account} on ${chainIdNameMap[chainId]} blockchain`}
                                 position="right"
@@ -197,8 +251,9 @@ export default function MainUI() {
                                 <Icon fill="#68738D" size={25} svg="helpCircle" />
                             </Tooltip>
                         </div> */}
-                        {/* as of now shows all the ethereum NFTs of the wallet on the chain connected to */}
-                        {/* <NFTBalance chain={chainId} address={account} /> */}
+                            {/* as of now shows all the ethereum NFTs of the wallet on the chain connected to */}
+                            {/* <NFTBalance chain={chainId} address={account} /> */}
+                        </div>
                     </div>
                 </div>
             ) : (

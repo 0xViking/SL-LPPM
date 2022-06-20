@@ -89,3 +89,11 @@ Day 1 :
 2. Added recent 100 txns History in the V2 page
 ![image](https://user-images.githubusercontent.com/72988597/174218426-ac3ebb71-83b6-42bd-b47b-26f03207ceb0.png)
 
+
+### Status-8 (18-07-2022) ~ 2.5hrs work:
+ * Created a global address to show same address in all the three pages
+ * added a button to reset(Shows the data of the connected wallet address instead of searched wallet address)
+
+
+### Status-9 (20-07-2022) ~ 1.5hrs work:
+ * Cleanup and UI changes

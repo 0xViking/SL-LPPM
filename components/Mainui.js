@@ -17,10 +17,10 @@ export default function MainUI() {
     }
 
     //React state variable - which stores the V2 positions value
-    const [v2Balance, setV2Balance] = useState("-")
+    const [v2Balance, setV2Balance] = useState(0)
 
     //React state variable - which stores the V3 positions value
-    const [v3Balance, setV3Balance] = useState("-")
+    const [v3Balance, setV3Balance] = useState(0)
 
     //React state variable - which tells wthether to show loading or not in the V2 positions value
     const [v2loading, setV2Loading] = useState(false)
@@ -31,6 +31,7 @@ export default function MainUI() {
     //React state variable - Input value user enters in the address modal
     const [inputAddrValue, setInputAddrValue] = useState("")
 
+    //React state variable - which gives the address the UI data is showing
     const [showingAddress, setShowingAddress] = useState("")
 
     //React state varibale to toggle the Modal(which asks user to enter an address to serach for) visiblity
@@ -53,32 +54,26 @@ export default function MainUI() {
         setInputAddrValue(value)
     }
 
+    //Function which sets the data to display in the notification and triggers handleNewNotification to dispatch
+    const setNotification = (type, message, title) => {
+        const params = {
+            type: type,
+            message: message,
+            title: title,
+        }
+        handleNewNotification(params)
+    }
+
     //Function to get the V2 & V3 positions value to show the worth
     const getValue = async (userAddress, appID) => {
         if (userAddress === undefined || userAddress === null || userAddress === "") {
-            const params = {
-                type: "error",
-                message: "Please enter an address",
-                title: "Wallet Value",
-            }
-            handleNewNotification(params)
+            setNotification("error", "Please enter an address", "Total Positions Value V2+V3")
             return
         } else if (userAddress.toLowerCase() === showingAddress.toLowerCase()) {
-            const params = {
-                type: "warning",
-                message: "Showing For the same address",
-                title: "Wallet Value",
-            }
-            // handleNewNotification(params)
             return
         }
         if (userAddress.length !== 42) {
-            const params = {
-                type: "error",
-                message: "Please enter a valid address",
-                title: "Wallet Value",
-            }
-            handleNewNotification(params)
+            setNotification("error", "Please enter a valid address", "Total Positions Value V2+V3")
             return
         }
         try {
@@ -91,20 +86,19 @@ export default function MainUI() {
                 return
             }
             appID === "uniswap-v2" ? setV2Loading(true) : setV3Loading(true)
+            setV2Balance(0)
+            setV3Balance(0)
             const response = await fetch(`/api/lpV2/${appID}/${userAddress}/ethereum`)
             const data = await response.json()
-            console.log(data)
-
             if (data.error || (data.data && data.data === "error")) {
                 appID === "uniswap-v2" ? setV2Loading(false) : setV3Loading(false)
                 return
             } else if (data.balances[userAddress.toLowerCase()].error) {
-                const params = {
-                    type: "error",
-                    message: data.balances[userAddress.toLowerCase()].error.message,
-                    title: "Total Positions Value V2+V3",
-                }
-                handleNewNotification(params)
+                setNotification(
+                    "error",
+                    data.balances[userAddress.toLowerCase()].error.message,
+                    "Total Positions Value V2+V3"
+                )
                 appID === "uniswap-v2" ? setV2Loading(false) : setV3Loading(false)
                 return
             } else {
@@ -114,21 +108,82 @@ export default function MainUI() {
                 appID === "uniswap-v2" ? setV2Loading(false) : setV3Loading(false)
             }
         } catch (error) {
-            const params = {
-                type: "error",
-                message: error,
-                title: "Unexpected error",
-            }
-            handleNewNotification(params)
+            setNotification("error", error, "Unexpected error")
         }
     }
 
+    //Function to make the individual function callsto get the V2 & V3 positions values
     const getAccountValue = async (accountAddr) => {
         setShowingAddress(accountAddr)
         globalUserAddress = accountAddr
-        console.log("userAddress stored", globalUserAddress)
         getValue(accountAddr, "uniswap-v2")
         getValue(accountAddr, "uniswap-v3")
+    }
+
+    //Function which returns Loading Spinner
+    const getLoadingSpinner = () => {
+        return (
+            // Loading animation to show while fetching data
+            <Loading
+                fontSize={20}
+                size={40}
+                spinnerColor="#2E7DAF"
+                spinnerType="loader"
+                text="Loading..."
+            />
+        )
+    }
+
+    //Function which returns the UI widget to show V2 and V3 positions value
+    const getWidget = (title, load, bal, keyId) => {
+        return (
+            <Widget
+                key={keyId}
+                info={
+                    load ? (
+                        <div className="grid pt-3">
+                            <div>{getLoadingSpinner()}</div>
+                        </div>
+                    ) : (
+                        "$ " +
+                        bal
+                            .toLocaleString("en-US", {
+                                minimumFractionDigits: 3,
+                            })
+                            .replace(/\.0+$/, "")
+                    )
+                }
+                title={title}
+            />
+        )
+    }
+
+    //Function to reset to own wallet UI data
+    const onOwnWalletButtonClick = () => {
+        globalUserAddress = ""
+        getAccountValue(account)
+    }
+
+    //Function to show the modal which asks user to enter different address to search for
+    const onCheckDiffAddrButtonClick = () => {
+        setAddressModalVisible(true)
+    }
+
+    //Function which returns the buttons depending on the ID of the button
+    const getButton = (givenId, text) => {
+        return (
+            <Button
+                id={givenId}
+                onClick={() => {
+                    givenId === "checkOwnAddr"
+                        ? onOwnWalletButtonClick()
+                        : onCheckDiffAddrButtonClick()
+                }}
+                text={text}
+                theme="secondary"
+                type="button"
+            />
+        )
     }
 
     //React hook to get the V2 & V3 positions value
@@ -153,30 +208,13 @@ export default function MainUI() {
                         <div></div>
                         <div>
                             {/* Button which enables usser to check different address than connect */}
-                            {globalUserAddress !== "" && globalUserAddress !== account ? (
-                                <Button
-                                    id="checkOwnAddr"
-                                    onClick={() => {
-                                        globalUserAddress = ""
-                                        getAccountValue(account)
-                                    }}
-                                    text="Check for connected wallet"
-                                    theme="secondary"
-                                    type="button"
-                                />
-                            ) : null}
+                            {globalUserAddress !== "" && globalUserAddress !== account
+                                ? getButton("checkOwnAddr", "Check for connected wallet")
+                                : null}
                         </div>
                         <div>
                             {/* Button which enables usser to check different address than connect */}
-                            <Button
-                                id="checkOtherAddr"
-                                onClick={() => {
-                                    setAddressModalVisible(true)
-                                }}
-                                text="Check different address"
-                                theme="secondary"
-                                type="button"
-                            />
+                            {getButton("checkOtherAddr", "Check different address")}
                         </div>
                     </div>
 
@@ -187,72 +225,31 @@ export default function MainUI() {
                             </div>
                             <div className="flex gap-5">
                                 <Widget
-                                    key="v2Bal"
                                     info={
-                                        v2loading ? (
-                                            <div className="grid pt-3">
-                                                <div>
-                                                    {/* Loading animation to show while fetching data */}
-                                                    <Loading
-                                                        fontSize={20}
-                                                        size={30}
-                                                        spinnerColor="#2E7DAF"
-                                                        spinnerType="loader"
-                                                        text="Loading..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            "$ " +
-                                            v2Balance
-                                                .toLocaleString("en-US", {
-                                                    minimumFractionDigits: 3,
-                                                })
-                                                .replace(/\.0+$/, "")
-                                        )
+                                        "$ " +
+                                        (v2Balance + v3Balance)
+                                            .toLocaleString("en-US", {
+                                                minimumFractionDigits: 3,
+                                            })
+                                            .replace(/\.0+$/, "")
                                     }
-                                    title="Uniswap V2 Positions Value"
-                                />
-                                <Widget
-                                    key="v3Bal"
-                                    info={
-                                        v3loading ? (
-                                            <div className="grid pt-3">
-                                                <div>
-                                                    {/* Loading animation to show while fetching data */}
-                                                    <Loading
-                                                        fontSize={20}
-                                                        size={30}
-                                                        spinnerColor="#2E7DAF"
-                                                        spinnerType="loader"
-                                                        text="Loading..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            "$ " +
-                                            v3Balance
-                                                .toLocaleString("en-US", {
-                                                    minimumFractionDigits: 3,
-                                                })
-                                                .replace(/\.0+$/, "")
-                                        )
-                                    }
-                                    title="Uniswap V3 Positions Value"
+                                    title="Total value(V2+V3 Positions)"
                                 />
                             </div>
-                        </div>
-                        <div className="ml-4 justify-center">
-                            {/* <div className="flex">
-                            <Tooltip
-                                content={`All NFTs in the wallet ${account} on ${chainIdNameMap[chainId]} blockchain`}
-                                position="right"
-                            >
-                                <Icon fill="#68738D" size={25} svg="helpCircle" />
-                            </Tooltip>
-                        </div> */}
-                            {/* as of now shows all the ethereum NFTs of the wallet on the chain connected to */}
-                            {/* <NFTBalance chain={chainId} address={account} /> */}
+                            <div className="flex gap-5">
+                                {getWidget(
+                                    "Uniswap V2 Positions Value",
+                                    v2loading,
+                                    v2Balance,
+                                    "v2Bal"
+                                )}
+                                {getWidget(
+                                    "Uniswap V3 Positions Value",
+                                    v3loading,
+                                    v3Balance,
+                                    "v3Bal"
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

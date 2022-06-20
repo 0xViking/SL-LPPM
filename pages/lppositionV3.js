@@ -29,21 +29,6 @@ export default function lppositionV3() {
     //page number to update the NFTs displaying when user clicks on SHOW MORE button
     const [page, setPage] = useState(1)
 
-    //Function that handles the setting of the NFTs data to display when user clicks on SHOW MORE button
-    const handleSettingDisplayNFTs = () => {
-        const startingIndex = (page - 1) * 10
-
-        setDisplayNFTs((prevNFTs) => [
-            ...prevNFTs,
-            ...NFTs.slice(startingIndex, startingIndex + 10),
-        ])
-    }
-
-    //Function which triggers the state change of page number when user clicks on SHOW MORE button
-    const handleShowMoreAction = () => {
-        setPage((prevPage) => prevPage + 1)
-    }
-
     //React state variable - The address which is searched for
     const [showingAddress, setShowingAddress] = useState("")
 
@@ -95,37 +80,95 @@ export default function lppositionV3() {
         setInputAddrValue(value)
     }
 
+    //Function that handles the setting of the NFTs data to display when user clicks on SHOW MORE button
+    const handleSettingDisplayNFTs = () => {
+        if (NFTs.length > displayNFTs.length) {
+            const startingIndex = (page - 1) * 10
+
+            setDisplayNFTs((prevNFTs) => [
+                ...prevNFTs,
+                ...NFTs.slice(startingIndex, startingIndex + 10),
+            ])
+        }
+    }
+
+    //Function which triggers the state change of page number when user clicks on SHOW MORE button
+    const handleShowMoreAction = () => {
+        setPage((prevPage) => prevPage + 1)
+    }
+
+    //Function to reset to own wallet UI data
+    const onOwnWalletButtonClick = () => {
+        globalUserAddress = ""
+        fetchData(account)
+        setLoading(true)
+    }
+
+    //Function to show the modal which asks user to enter different address to search for
+    const onCheckDiffAddrButtonClick = () => {
+        setAddressModalVisible(true)
+    }
+
+    //Function which returns the buttons depending on the ID of the button
+    const getButton = (givenId, text) => {
+        return (
+            <Button
+                id={givenId}
+                onClick={() => {
+                    givenId === "checkOwnAddr"
+                        ? onOwnWalletButtonClick()
+                        : onCheckDiffAddrButtonClick()
+                }}
+                text={text}
+                theme="secondary"
+                type="button"
+            />
+        )
+    }
+
+    //Function which returns Loading Spinner
+    const getLoadingSpinner = () => {
+        return (
+            // Loading animation to show while fetching data
+            <Loading
+                fontSize={20}
+                size={40}
+                spinnerColor="#2E7DAF"
+                spinnerType="loader"
+                text="Loading..."
+            />
+        )
+    }
+
+    //Function which sets the data to display in the notification and triggers handleNewNotification to dispatch
+    const setNotification = (type, message, title) => {
+        const params = {
+            type: type,
+            message: message,
+            title: title,
+        }
+        handleNewNotification(params)
+    }
+
+    //Function to reset UI to initial state
+    const resetUI = () => {
+        setNFTs([])
+        setDisplayNFTs([])
+        setLoading(false)
+    }
+
     //Function takes care of fetching the V3-LP positions of the address
     const fetchData = async (addressGiven) => {
         if (addressGiven === undefined || addressGiven === null || addressGiven === "") {
-            const params = {
-                type: "error",
-                message: "Please enter a address",
-                title: "Uniswap LP Position V3",
-                icon: "exclamation",
-            }
-            handleNewNotification(params)
-            setNFTs([])
+            setNotification("error", "Please enter a address", "Uniswap LP Position V3")
             setLoading(false)
             return
         } else if (addressGiven.toLowerCase() === showingAddress.toLowerCase()) {
-            const params = {
-                type: "warning",
-                message: "Showing For the same address",
-                title: "Uniswap LP Position V3",
-            }
-            // handleNewNotification(params)
             return
         }
         addressGiven = addressGiven.toLowerCase().trim()
         if (addressGiven.length !== 42) {
-            const params = {
-                type: "error",
-                message: "Please enter a valid address",
-                title: "Uniswap LP Position V3",
-                icon: "exclamation",
-            }
-            handleNewNotification(params)
+            setNotification("error", "Please enter a valid address", "Uniswap LP Position V3")
             return
         }
         options.user = addressGiven
@@ -137,73 +180,43 @@ export default function lppositionV3() {
                 chainId === null ||
                 chainIdAddrMap[chainId] === undefined
             ) {
-                const params = {
-                    type: "error",
-                    message: "Supports only Ethereum and Polygon",
-                    title: "Uniswap LP Position V3",
-                    icon: "exclamation",
-                }
-                handleNewNotification(params)
-                setNFTs([])
-                setDisplayNFTs([])
-                setLoading(false)
+                setNotification(
+                    "error",
+                    "Supports only Ethereum and Polygon",
+                    "Uniswap LP Position V3"
+                )
+                resetUI()
                 return
             }
-            setNFTs([])
-            setDisplayNFTs([])
+            resetUI()
             setLoading(true)
             const response = await fetch(
                 `/api/lpV3/${options.user}/${options.token_address}/${options.chainId}`
             )
             const data = await response.json()
             if (chainIdAddrMap[chainId] === undefined) {
-                const params = {
-                    type: "error",
-                    message: "This network is not supported",
-                    title: "Uniswap LP Position V3",
-                    icon: "exclamation",
-                }
-                handleNewNotification(params)
-                setNFTs([])
-                setDisplayNFTs([])
-                setLoading(false)
+                setNotification(
+                    "error",
+                    "Supports only Ethereum and Polygon",
+                    "Uniswap LP Position V3"
+                )
+                resetUI()
             } else if (data && data.result && data.result.length <= 0) {
-                const params = {
-                    type: "warning",
-                    message: `No UNISWAP-V3 LP NFTs found on ${
+                setNotification(
+                    "warning",
+                    `No UNISWAP-V3 LP NFTs found on ${
                         chainIdNameMap[chainId] ? chainIdNameMap[chainId] : chainId
                     } chain for ${options.user}`,
-                    title: "Uniswap LP Position V3",
-                    icon: "exclamation",
-                }
-                handleNewNotification(params)
-                setNFTs([])
-                setDisplayNFTs([])
-                setLoading(false)
+                    "Uniswap LP Position V3"
+                )
+                resetUI()
             } else {
-                console.log(data.result)
-
-                const params = {
-                    type: "success",
-                    message: "LP positions found",
-                    title: "Uniswap LP Position V3",
-                }
-                if (data.result.length > 0 && NFTs.length < 1) {
-                    // handleNewNotification(params)
-                }
                 setNFTs(data.result)
                 setLoading(false)
             }
         } catch (error) {
-            const params = {
-                type: "error",
-                message: error,
-                title: "Unexpected error",
-            }
-            handleNewNotification(params)
-            setNFTs([])
-            setDisplayNFTs([])
-            setLoading(false)
+            setNotification("error", error, "Unexpected error")
+            resetUI()
         }
     }
 
@@ -219,6 +232,27 @@ export default function lppositionV3() {
                 <Icon fill="#68738D" size={25} svg="helpCircle" />
             </Tooltip>
         )
+    }
+
+    const getDisplayNFTs = () => {
+        return displayNFTs.map((nft) => (
+            <li
+                key={nft.token_hash}
+                className="p-2 relative border-2 border-r-4 border-t-4 rounded-lg shadow-lg"
+            >
+                <a
+                    href={`https://opensea.io/assets/ethereum/${chainIdAddrMap[chainId]}/${nft.token_id}`}
+                    target="_blank"
+                >
+                    <NFT
+                        address="0xc36442b4a4522e871399cd717abdd847ab11fe88"
+                        chain={chainId}
+                        metadata={nft.metadata && JSON.parse(nft.metadata)}
+                        tokenId={nft.token_id}
+                    />
+                </a>
+            </li>
+        ))
     }
 
     //React hook to display more NFTs when page number or react state variable NFTs changes
@@ -258,31 +292,13 @@ export default function lppositionV3() {
                         </div>
                         <div>
                             {/* Button which enables usser to check different address than connect */}
-                            {globalUserAddress !== "" && globalUserAddress !== account ? (
-                                <Button
-                                    id="checkOwnAddr"
-                                    onClick={() => {
-                                        globalUserAddress = ""
-                                        fetchData(account)
-                                        setLoading(true)
-                                    }}
-                                    text="Check for connected wallet"
-                                    theme="secondary"
-                                    type="button"
-                                />
-                            ) : null}
+                            {globalUserAddress !== "" && globalUserAddress !== account
+                                ? getButton("checkOwnAddr", "Check for connected wallet")
+                                : null}
                         </div>
                         <div>
                             {/* Button which enables usser to check different address than connect */}
-                            <Button
-                                id="checkOtherAddr"
-                                onClick={() => {
-                                    setAddressModalVisible(true)
-                                }}
-                                text="Check different address"
-                                theme="secondary"
-                                type="button"
-                            />
+                            {getButton("checkOtherAddr", "Check different address")}
                         </div>
                     </div>
                     {!loading || (displayNFTs && displayNFTs.length !== 0) ? (
@@ -293,34 +309,13 @@ export default function lppositionV3() {
                                     className="grid grid-cols-1 gap-x-8 gap-y-8 sm:gap-x-10 md:grid-cols-2 md:gap-x-8 xl:grid-cols-4 xl:gap-x-8"
                                 >
                                     {/* This is the NFTs Displaying for Uniswap Liquidity V3 Positions */}
-                                    {displayNFTs &&
-                                        displayNFTs.length > 0 &&
-                                        displayNFTs.map((nft) => (
-                                            <li
-                                                key={nft.token_hash}
-                                                className="p-2 relative border-2 border-r-4 border-t-4 rounded-lg shadow-lg"
-                                            >
-                                                <a
-                                                    href={`https://opensea.io/assets/ethereum/${chainIdAddrMap[chainId]}/${nft.token_id}`}
-                                                    target="_blank"
-                                                >
-                                                    <NFT
-                                                        address="0xc36442b4a4522e871399cd717abdd847ab11fe88"
-                                                        chain={chainId}
-                                                        metadata={
-                                                            nft.metadata && JSON.parse(nft.metadata)
-                                                        }
-                                                        tokenId={nft.token_id}
-                                                    />
-                                                </a>
-                                            </li>
-                                        ))}
+                                    {displayNFTs && displayNFTs.length > 0 && getDisplayNFTs()}
                                 </ul>
                                 {NFTs &&
                                     NFTs.length > 0 &&
                                     displayNFTs &&
                                     displayNFTs.length > 0 &&
-                                    NFTs.length !== displayNFTs.length && (
+                                    NFTs.length > displayNFTs.length && (
                                         //Show more button to show more NFTs if the user has more NFTs than the displayNFTs
                                         <div className="flex justify-center pt-4 w-full">
                                             <Button
@@ -337,7 +332,6 @@ export default function lppositionV3() {
                                 {displayNFTs.length == 0 && (
                                     //Shows this message if the user has no NFTs
                                     <div className="flex justify-center font-bold text-2xl text-blue-400">
-                                        {" "}
                                         No Postions Found
                                     </div>
                                 )}
@@ -347,13 +341,7 @@ export default function lppositionV3() {
                         <div className="grid place-items-center h-screen w-full px-96 mr-60">
                             <div>
                                 {/* Shows Loading animation while fetching the V3-Postions NFTs */}
-                                <Loading
-                                    fontSize={20}
-                                    size={40}
-                                    spinnerColor="#2E7DAF"
-                                    spinnerType="loader"
-                                    text="Loading..."
-                                />
+                                {getLoadingSpinner()}
                             </div>
                         </div>
                     )}

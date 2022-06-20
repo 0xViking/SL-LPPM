@@ -90,41 +90,38 @@ export default function lppositionV2() {
         })
     }
 
+    //Function which sets the data to display in the notification and triggers handleNewNotification to dispatch
+    const setNotification = (type, message, title) => {
+        const params = {
+            type: type,
+            message: message,
+            title: title,
+        }
+        handleNewNotification(params)
+    }
+
+    //Function which resets the displaying data
+    const resetDisplayData = () => {
+        setPositions([])
+        setPositionsTableData([])
+    }
+
     //Function takes care of fetching the V2-LP positions of the address
     const fetchData = async (addressGiven) => {
         if (addressGiven === undefined || addressGiven === null || addressGiven === "") {
-            const params = {
-                type: "error",
-                message: "Please enter an address",
-                title: "Uniswap LP Position V2",
-                icon: "exclamation",
-            }
-            handleNewNotification(params)
+            setNotification("error", "Please enter an address", "Uniswap LP Position V2")
             return
         } else if (addressGiven.toLowerCase() === showingAddress.toLowerCase()) {
-            const params = {
-                type: "warning",
-                message: "Showing For the same address",
-                title: "Uniswap LP Position V2",
-            }
-            // handleNewNotification(params)
             return
         }
         addressGiven = addressGiven.toLowerCase().trim()
         if (addressGiven.length !== 42) {
-            const params = {
-                type: "error",
-                message: "Please enter a valid address",
-                title: "Uniswap LP Position V2",
-                icon: "exclamation",
-            }
-            handleNewNotification(params)
+            setNotification("error", "Please enter a valid address", "Uniswap LP Position V2")
             return
         }
         setModalPoolVisible(false)
         setModalVisible(false)
-        setTableData([])
-        setpoolTableData([])
+        resetDisplayData()
         options.user = addressGiven
         setShowingAddress(options.user)
         globalUserAddress = options.user
@@ -135,71 +132,44 @@ export default function lppositionV2() {
                 chainIdNameMap[chainId] === null ||
                 chainIdNameMap[chainId] === undefined
             ) {
-                const params = {
-                    type: "error",
-                    message: "Supports only Ethereum",
-                    title: "Uniswap LP Position V2",
-                }
-                handleNewNotification(params)
-                setPositions([])
-                setPositionsTableData([])
+                setNotification("error", "Supports only Ethereum", "Uniswap LP Position V2")
+                resetDisplayData()
                 return
             }
-            setPositions([])
-            setPositionsTableData([])
+            resetDisplayData()
             setLoading(true)
             const response = await fetch(
                 `/api/lpV2/${options.appId}/${options.user}/${chainIdNameMap[options.chainId]}`
             )
             const data = await response.json()
-            console.log(data)
             setLoading(false)
             if (data.error || (data.data && data.data === "error")) {
-                setPositions([])
-                setPositionsTableData([])
+                resetDisplayData()
                 return
             } else if (data.balances[options.user.toLowerCase()].error) {
-                const params = {
-                    type: "info",
-                    message: data.balances[options.user.toLowerCase()].error.message,
-                    title: "Uniswap LP Position V2",
-                }
-                handleNewNotification(params)
-                setPositions([])
-                setPositionsTableData([])
+                setNotification(
+                    "warning",
+                    data.balances[options.user.toLowerCase()].error.message,
+                    "Uniswap LP Position V2"
+                )
+                resetDisplayData()
             } else if (data.balances[options.user.toLowerCase()].products.length === 0) {
-                setPositions([])
-                setPositionsTableData([])
-                const params = {
-                    type: "warning",
-                    message: `No LP positions found on ${
+                setNotification(
+                    "warning",
+                    `No LP positions found on ${
                         chainIdNameMap[chainId] ? chainIdNameMap[chainId] : chainId
                     } chain for ${options.user}`,
-                    title: "Uniswap LP Position V2",
-                }
-                handleNewNotification(params)
-                setPositions([])
-                setPositionsTableData([])
+                    "Uniswap LP Position V2"
+                )
+                resetDisplayData()
                 setLoading(false)
             } else {
-                const params = {
-                    type: "success",
-                    message: "LP positions found",
-                    title: "Uniswap LP Position V2",
-                }
-                // handleNewNotification(params)
                 setPositions(data.balances[options.user.toLowerCase()].products)
                 setPositionsData(data.balances[options.user.toLowerCase()].products)
             }
         } catch (error) {
-            const params = {
-                type: "error",
-                message: error,
-                title: "Unexpected error",
-            }
-            handleNewNotification(params)
-            setPositions([])
-            setPositionsTableData([])
+            setNotification("error", error, "Unexpected error")
+            resetDisplayData()
         }
     }
 
@@ -293,7 +263,6 @@ export default function lppositionV2() {
             })
             setpoolTableData(resArr)
             setPoolTxnTitle(poolName)
-            console.log(poolTableData)
         } catch (error) {
             console.log(error)
         }
@@ -348,7 +317,6 @@ export default function lppositionV2() {
             })
             setTableData(resArr)
             setPoolTitle(poolName)
-            console.log(tableData)
         } catch (error) {
             console.log(error)
         }
@@ -521,6 +489,49 @@ export default function lppositionV2() {
         )
     }
 
+    //Function to reset to own wallet UI data
+    const onOwnWalletButtonClick = () => {
+        globalUserAddress = ""
+        fetchData(account)
+        setLoading(true)
+    }
+
+    //Function to show the modal which asks user to enter different address to search for
+    const onCheckDiffAddrButtonClick = () => {
+        setAddressModalVisible(true)
+    }
+
+    //Function which returns the buttons depending on the ID of the button
+    const getButton = (givenId, text) => {
+        return (
+            <Button
+                id={givenId}
+                onClick={() => {
+                    givenId === "checkOwnAddr"
+                        ? onOwnWalletButtonClick()
+                        : onCheckDiffAddrButtonClick()
+                }}
+                text={text}
+                theme="secondary"
+                type="button"
+            />
+        )
+    }
+
+    //Function which returns Loading Spinner
+    const getLoadingSpinner = () => {
+        return (
+            // Loading animation to show while fetching data
+            <Loading
+                fontSize={20}
+                size={40}
+                spinnerColor="#2E7DAF"
+                spinnerType="loader"
+                text="Loading..."
+            />
+        )
+    }
+
     //React hook to fetch the V2-LP positions for the user whenever the user connect a wallet address or changes the chain
     useEffect(() => {
         if (
@@ -549,48 +560,21 @@ export default function lppositionV2() {
                             {getToolTip()}
                         </div>
                         <div>
-                            {/* Button which enables usser to check different address than connect */}
-                            {globalUserAddress !== "" && globalUserAddress !== account ? (
-                                <Button
-                                    id="checkOwnAddr"
-                                    onClick={() => {
-                                        globalUserAddress = ""
-                                        fetchData(account)
-                                        setLoading(true)
-                                    }}
-                                    text="Check for connected wallet"
-                                    theme="secondary"
-                                    type="button"
-                                />
-                            ) : null}
+                            {/* Button which enables usser to reset to connected wallet */}
+                            {globalUserAddress !== "" && globalUserAddress !== account
+                                ? getButton("checkOwnAddr", "Check for connected wallet")
+                                : null}
                         </div>
                         <div>
                             {/* Button which enables usser to check different address than connect */}
-                            <Button
-                                id="checkOtherAddr"
-                                onClick={() => {
-                                    setAddressModalVisible(true)
-                                }}
-                                text="Check different address"
-                                theme="secondary"
-                                type="button"
-                            />
+                            {getButton("checkOtherAddr", "Check different address")}
                         </div>
                     </div>
                     {!loading || (positionsTableData && positionsTableData.length !== 0) ? (
                         <div className="py-4">{getPositionsTable()}</div>
                     ) : (
                         <div className="grid place-items-center h-screen w-full px-96 mr-60">
-                            <div>
-                                {/* Loading animation to show while fetching data */}
-                                <Loading
-                                    fontSize={20}
-                                    size={40}
-                                    spinnerColor="#2E7DAF"
-                                    spinnerType="loader"
-                                    text="Loading..."
-                                />
-                            </div>
+                            <div>{getLoadingSpinner()}</div>
                         </div>
                     )}
                 </div>
@@ -627,13 +611,7 @@ export default function lppositionV2() {
                 ) : (
                     <div className="flex justify-center py-8">
                         {/* Shows Loading animation while fetching the Txn logs in the pool */}
-                        <Loading
-                            fontSize={20}
-                            size={40}
-                            spinnerColor="#2E7DAF"
-                            spinnerType="loader"
-                            text="Loading..."
-                        />
+                        {getLoadingSpinner()}
                     </div>
                 )}
             </div>
@@ -643,13 +621,6 @@ export default function lppositionV2() {
                         <div></div>
                     ) : (
                         <div className="pb-4">
-                            {/* <Widget
-                                info={
-                                    <div className="flex justify-center font-bold text-2xl text-blue-400">
-                                        Transaction logs for the pool
-                                    </div>
-                                }
-                            /> */}
                             <Accordion
                                 id="accordion"
                                 isExpanded={true}
@@ -664,14 +635,8 @@ export default function lppositionV2() {
                     )
                 ) : (
                     <div className="flex justify-center py-8">
-                        {/* Shows Loading animation while fetching the Txn logs in the pool */}
-                        <Loading
-                            fontSize={20}
-                            size={40}
-                            spinnerColor="#2E7DAF"
-                            spinnerType="loader"
-                            text="Loading..."
-                        />
+                        {/* Shows Loading animation while fetching your Txn logs in the pool */}
+                        {getLoadingSpinner()}
                     </div>
                 )}
             </div>
